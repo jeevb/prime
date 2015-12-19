@@ -61,7 +61,7 @@ def notify(text, host=None, port=None, token=None, route=None):
     notifier = PrimeNotifyAPI(host=cfg.get('host', host),
                               port=cfg.get('port', port),
                               token=cfg.get('token', token))
-    notifer(text=text, route=cfg.get('route', route).split(','))
+    notifier(text=text, route=cfg.get('route', route).split(','))
 
 
 if __name__ == '__main__':
