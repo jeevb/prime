@@ -21,7 +21,7 @@ def get_config():
         with open(CONFIG_FILE_PATH, 'r') as cfg_file:
             return yaml.load(cfg_file)
     except:
-        return None
+        return DEFAULT_CONFIG
 
 def valid_config_file_exists():
     cfg = get_config() or {}
@@ -47,21 +47,17 @@ def init():
         print('You already have a valid configuration file.',
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
-@arg('--host', required=False,
-     help='Host address of the Services master.')
-@arg('--port', required=False,
-     help='Port that the Services master will be listening on.')
-@arg('--token', required=False,
-     help='API key to authenticate with Services master.')
-@arg('--to', required=False,
-     help='Route to send messages to.')
-@arg('text')
+@arg('--host', help='Host address of the Services master.')
+@arg('--port', help='Port that the Services master will be listening on.')
+@arg('--token', help='API key to authenticate with Services master.')
+@arg('--to', help='Route to send messages to.')
+@arg('text', nargs='*')
 def notify(text, host=None, port=None, token=None, to=None):
     cfg = get_config()
     notifier = PrimeNotifyAPI(host=host or cfg.get('host'),
                               port=port or cfg.get('port'),
                               token=token or cfg.get('token'))
-    notifier(text=text, to=(to or cfg.get('to')).split(','))
+    notifier(text=' '.join(text), to=(to or cfg.get('to')).split(','))
 
 
 if __name__ == '__main__':
