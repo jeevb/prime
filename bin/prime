@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+import os
+import yaml
+
+from argh import arg
+from argh.dispatching import dispatch_commands
+from collections import OrderedDict
+from prime.notify import PrimeNotifyAPI
+
+CONFIG_FILE_PATH = os.path.expanduser('~/.prime.yml')
+DEFAULT_CONFIG = OrderedDict([
+    ('host', '127.0.0.1'),
+    ('port', '8000'),
+    ('token', ''),
+    ('route', 'default'),
+])
+
+def get_config():
+    try:
+        with open(CONFIG_FILE_PATH, 'r') as cfg_file:
+            return yaml.load(cfg_file)
+    except:
+        return None
+
+def valid_config_file_exists():
+    cfg = get_config() or {}
+    return all(k in cfg for k in DEFAULT_CONFIG)
+
+def init():
+    if not valid_config_file_exists():
+        cfg = {}
+        try:
+            for prompt, value in DEFAULT_CONFIG.items():
+                cfg[prompt] = input('{0} [{1}]: '.format(
+                    prompt.capitalize(),
+                    value
+                )) or value
+        except KeyboardInterrupt:
+            return
+
+        with open(CONFIG_FILE_PATH, 'w') as cfg_file:
+            cfg_file.write(yaml.dump(cfg, default_flow_style=False))
+
+        print('Congratulations! You have successfully configured Prime.')
+    else:
+        print('You already have a valid configuration file.',
+              'You may edit it at %r.' % CONFIG_FILE_PATH)
+
+@arg('--host', required=False, default=DEFAULT_CONFIG.get('host'),
+     help='Host address of the Services master.')
+@arg('--port', required=False, default=DEFAULT_CONFIG.get('port'),
+     help='Port that the Services master will be listening on.')
+@arg('--token', required=False, default=DEFAULT_CONFIG.get('token'),
+     help='API key to authenticate with Services master.')
+@arg('--route', required=False, default=DEFAULT_CONFIG.get('route'),
+     help='Route to send messages to.')
+@arg('text')
+def notify(text, host=None, port=None, token=None, route=None):
+    cfg = get_config()
+    notifier = PrimeNotifyAPI(host=cfg.get('host', host),
+                              port=cfg.get('port', port),
+                              token=cfg.get('token', token))
+    notifer(text=text, route=cfg.get('route', route).split(','))
+
+
+if __name__ == '__main__':
+    dispatch_commands([init, notify])
