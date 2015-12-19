@@ -47,21 +47,21 @@ def init():
         print('You already have a valid configuration file.',
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
-@arg('--host', required=False, default=DEFAULT_CONFIG.get('host'),
+@arg('--host', required=False,
      help='Host address of the Services master.')
-@arg('--port', required=False, default=DEFAULT_CONFIG.get('port'),
+@arg('--port', required=False,
      help='Port that the Services master will be listening on.')
-@arg('--token', required=False, default=DEFAULT_CONFIG.get('token'),
+@arg('--token', required=False,
      help='API key to authenticate with Services master.')
-@arg('--to', required=False, default=DEFAULT_CONFIG.get('to'),
+@arg('--to', required=False,
      help='Route to send messages to.')
 @arg('text')
 def notify(text, host=None, port=None, token=None, to=None):
     cfg = get_config()
-    notifier = PrimeNotifyAPI(host=cfg.get('host', host),
-                              port=cfg.get('port', port),
-                              token=cfg.get('token', token))
-    notifier(text=text, to=cfg.get('to', to).split(','))
+    notifier = PrimeNotifyAPI(host=host or cfg.get('host'),
+                              port=port or cfg.get('port'),
+                              token=token or cfg.get('token'))
+    notifier(text=text, to=(to or cfg.get('to')).split(','))
 
 
 if __name__ == '__main__':
