@@ -36,7 +36,7 @@ Prime sources configuration options from two locations:
     - `--host`: Host address of the Services master.
     - `--port`: Port that the Services master will be listening on.
     - `--token`: API key to authenticate with Services master.
-    - `--route`: Route to send messages to.
+    - `--to`: Route to send messages to.
 
 To create and populate a configuration file in the user's home folder:
 ```

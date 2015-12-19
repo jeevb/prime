@@ -13,7 +13,7 @@ DEFAULT_CONFIG = OrderedDict([
     ('host', '127.0.0.1'),
     ('port', '8000'),
     ('token', ''),
-    ('route', 'default'),
+    ('to', 'default'),
 ])
 
 def get_config():
@@ -53,15 +53,15 @@ def init():
      help='Port that the Services master will be listening on.')
 @arg('--token', required=False, default=DEFAULT_CONFIG.get('token'),
      help='API key to authenticate with Services master.')
-@arg('--route', required=False, default=DEFAULT_CONFIG.get('route'),
+@arg('--to', required=False, default=DEFAULT_CONFIG.get('to'),
      help='Route to send messages to.')
 @arg('text')
-def notify(text, host=None, port=None, token=None, route=None):
+def notify(text, host=None, port=None, token=None, to=None):
     cfg = get_config()
     notifier = PrimeNotifyAPI(host=cfg.get('host', host),
                               port=cfg.get('port', port),
                               token=cfg.get('token', token))
-    notifier(text=text, route=cfg.get('route', route).split(','))
+    notifier(text=text, to=cfg.get('to', to).split(','))
 
 
 if __name__ == '__main__':
