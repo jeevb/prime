@@ -23,12 +23,8 @@ def get_config():
     except:
         return DEFAULT_CONFIG
 
-def valid_config_file_exists():
-    cfg = get_config() or {}
-    return all(k in cfg for k in DEFAULT_CONFIG)
-
 def init():
-    if not valid_config_file_exists():
+    if not os.path.exists(CONFIG_FILE_PATH):
         cfg = {}
         try:
             for prompt, value in DEFAULT_CONFIG.items():
@@ -44,7 +40,7 @@ def init():
 
         print('Congratulations! You have successfully configured Prime.')
     else:
-        print('You already have a valid configuration file.',
+        print('You already have a configuration file.',
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
 @arg('--host', help='Host address of the Services master.')
