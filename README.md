@@ -25,7 +25,7 @@ $ source env/bin/activate
 
 and install Prime with all of its dependencies:
 ```
-$ pip install git+ssh://git@bitbucket.org/jeevb/prime.git
+$ pip install git+https://jeevb@bitbucket.org/jeevb/prime.git
 ```
 
 #### Configuration
