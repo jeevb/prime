@@ -44,13 +44,11 @@ def init():
         print('You already have a configuration file.',
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
-@arg('-h', '--host', help='Host address of the Services master.')
-@arg('-p', '--port',
-     help='Port that the Services master will be listening on.')
-@arg('-t', '--token', help='API key to authenticate with Services master.')
+@arg('--host', help='Host address of the Services master.')
+@arg('--port', help='Port that the Services master will be listening on.')
+@arg('--token', help='API key to authenticate with Services master.')
 @arg('--to', help='Route to send messages to.')
-@arg('-c', '--cert',
-     help='Path to certificate file to be used for SSL verification.')
+@arg('--cert', help='Path to certificate file for SSL verification.')
 @arg('text', nargs='*')
 def notify(text, host=None, port=None, token=None, to=None, cert=None):
     cfg = get_config()
