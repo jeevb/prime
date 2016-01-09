@@ -12,15 +12,15 @@ setup(
     description='Python bindings and CLI for Services.',
     install_requires=[
         'argh==0.26.1',
-        'cffi==1.4.1',
-        'cryptography==1.1.2',
+        'cffi==1.4.2',
+        'cryptography==1.2.1',
         'idna==2.0',
         'ndg-httpsclient==0.4.0',
         'pyasn1==0.1.9',
         'pycparser==2.14',
         'pyOpenSSL==0.15.1',
         'PyYAML==3.11',
-        'requests==2.9.0',
+        'requests==2.9.1',
         'six==1.10.0',
     ],
     zip_safe=True
