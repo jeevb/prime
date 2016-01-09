@@ -37,6 +37,7 @@ Prime sources configuration options from two locations:
     - `--port`: Port that the Services master will be listening on.
     - `--token`: API key to authenticate with Services master.
     - `--to`: Route to send messages to.
+    - `--cert`: Certificate file to use for SSL verification.
 
 To create and populate a configuration file in the user's home folder:
 ```
