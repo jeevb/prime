@@ -14,6 +14,7 @@ DEFAULT_CONFIG = OrderedDict([
     ('port', '8000'),
     ('token', ''),
     ('to', 'default'),
+    ('cert', ''),
 ])
 
 def get_config():
@@ -43,16 +44,20 @@ def init():
         print('You already have a configuration file.',
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
-@arg('--host', help='Host address of the Services master.')
-@arg('--port', help='Port that the Services master will be listening on.')
-@arg('--token', help='API key to authenticate with Services master.')
+@arg('-h', '--host', help='Host address of the Services master.')
+@arg('-p', '--port',
+     help='Port that the Services master will be listening on.')
+@arg('-t', '--token', help='API key to authenticate with Services master.')
 @arg('--to', help='Route to send messages to.')
+@arg('-c', '--cert',
+     help='Path to certificate file to be used for SSL verification.')
 @arg('text', nargs='*')
-def notify(text, host=None, port=None, token=None, to=None):
+def notify(text, host=None, port=None, token=None, to=None, cert=None):
     cfg = get_config()
     notifier = PrimeNotifyAPI(host=host or cfg.get('host'),
                               port=port or cfg.get('port'),
-                              token=token or cfg.get('token'))
+                              token=token or cfg.get('token'),
+                              cert=cert or cfg.get('cert') or False)
     notifier(text=' '.join(text), to=(to or cfg.get('to')).split(','))
 
 
