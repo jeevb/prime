@@ -1,49 +1,47 @@
 # Prime
 
-Python bindings and CLI for [*Services*](https://bitbucket.org/jeevb/services). Currently, it can:
+Chatbot, python bindings and CLI for [*Services*](https://bitbucket.org/jeevb/services). Currently, it can:
 
+- Respond to commands on Slack
 - Send notifications to a Services master.
 
 ## Getting started
 
-#### Setting up a virtual environment
-`virtualenv` is recommended to set up all the necessary dependencies. You may install it using `pip` as follows:
+#### Setting up a Docker container
+Install `docker-compose` if necessary:
 ```
-$ pip install virtualenv
-```
-
-Next, initiate a fresh virtual enviroment:
-```
-$ virtualenv env
+$ pip install docker-compose
 ```
 
-#### Installation
-Activate your newly created virtual environment:
+Clone Prime into your local directory:
 ```
-$ source env/bin/activate
+$ git clone https://bitbucket.org/jeevb/prime.git
 ```
 
-and install Prime with all of its dependencies:
+Build the Docker image:
 ```
-$ pip install git+https://jeevb@bitbucket.org/jeevb/prime.git
+$ cd prime
+$ docker-compose build
 ```
 
 #### Configuration
 Prime sources configuration options from two locations:
 
-- Current user's home folder: `$HOME/.prime.yml`
-- Arguments passed to the command:
+- Current user's home folder: `$HOME/.prime/config.yml`
+- Arguments passed to the `notify` command:
     - `--host`: Host address of the Services master.
     - `--port`: Port that the Services master will be listening on.
     - `--token`: API key to authenticate with Services master.
     - `--to`: Route to send messages to.
     - `--cert`: Certificate file to use for SSL verification.
+- Argument passed to the `slack` command:
+    - `--token`: API key to authenticate with the Slack RTM API.
 
 To create and populate a configuration file in the user's home folder:
 ```
-$ prime init
+$ docker-compose run --rm prime init
 ```
-and specify the necessary information to communicate with the Services master.
+and specify the necessary information to communicate with the Services master and Slack RTM API.
 
 
 # License

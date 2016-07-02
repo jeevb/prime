@@ -1,4 +1,4 @@
-from prime.generics import PostAPIRequest
+from prime.api.generics import PostAPIRequest
 
 
 class PrimeNotifyAPI(PostAPIRequest):

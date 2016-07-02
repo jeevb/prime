@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import yaml
 
 from argh import arg
 from argh.dispatching import dispatch_commands
 from collections import OrderedDict
-from prime.notify import PrimeNotifyAPI
+from prime.api.notify import PrimeNotifyAPI
+from prime.bot.slackbot import SlackBot
+from prime.bot.loaders import USER_DIR, USER_COMMANDS_DIR, USER_LISTENERS_DIR
 
-CONFIG_FILE_PATH = os.path.expanduser('~/.prime.yml')
+CONFIG_FILE_PATH = os.path.join(USER_DIR, 'config.yml')
 DEFAULT_CONFIG = OrderedDict([
     ('host', '127.0.0.1'),
     ('port', '8000'),
     ('token', ''),
     ('to', 'default'),
     ('cert', ''),
+    ('slack_token', ''),
 ])
 
 def get_config():
@@ -25,6 +29,11 @@ def get_config():
         return DEFAULT_CONFIG
 
 def init():
+    # Make user configuration directory
+    for d in (USER_DIR, USER_COMMANDS_DIR, USER_LISTENERS_DIR,):
+        if not os.path.exists(d):
+            os.makedirs(d)
+
     if not os.path.exists(CONFIG_FILE_PATH):
         cfg = {}
         try:
@@ -58,6 +67,26 @@ def notify(text, host=None, port=None, token=None, to=None, cert=None):
                               cert=cert or cfg.get('cert') or False)
     notifier(text=' '.join(text), to=(to or cfg.get('to')).split(','))
 
+@arg('--token', help='API key to authenticate with the Slack RTM API.')
+def slack(token=None):
+    print(
+        '    ____       _\n'
+        '   / __ \_____(_)___ ___  ___\n'
+        '  / /_/ / ___/ / __ `__ \/ _ \\\n'
+        ' / ____/ /  / / / / / / /  __/\n'
+        '/_/   /_/  /_/_/ /_/ /_/\___/\n\n',
+        file=sys.stderr
+    )
+    token = token or get_config().get('slack_token')
+    if not token:
+        print('No Slack Bot API token specified.', file=sys.stderr)
+    else:
+        bot = SlackBot(token)
+        try:
+            bot.start()
+            bot.join()
+        except KeyboardInterrupt:
+            bot.stop()
 
 if __name__ == '__main__':
-    dispatch_commands([init, notify])
+    dispatch_commands([init, notify, slack])

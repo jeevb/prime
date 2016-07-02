@@ -1,0 +1,6 @@
+prime:
+  restart: always
+  build: .
+  volumes:
+    - "$HOME/.prime:/root/.prime"
+  command: "slack"

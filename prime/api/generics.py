@@ -1,6 +1,6 @@
 import requests
 
-from prime.exceptions import APIError
+from prime.api.exceptions import APIError
 
 
 class GenericAPIRequest(object):
