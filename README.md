@@ -2,10 +2,36 @@
 
 Chatbot, python bindings and CLI for [*Services*](https://bitbucket.org/jeevb/services). Currently, it can:
 
-- Respond to commands on Slack
+- Respond to commands on Slack.
 - Send notifications to a Services master.
 
 ## Getting started
+
+There are two ways to install Prime:
+
+- virtualenv
+- Docker
+
+#### Setting up a virtual environment
+`virtualenv` is recommended to set up all the necessary dependencies. You may install it using `pip` as follows:
+```
+$ pip install virtualenv
+```
+
+Next, initiate a fresh virtual enviroment:
+```
+$ virtualenv env
+```
+
+Activate your newly created virtual environment:
+```
+$ source env/bin/activate
+```
+
+and install Prime with all of its dependencies:
+```
+(env)$ pip install git+https://jeevb@bitbucket.org/jeevb/prime.git
+```
 
 #### Setting up a Docker container
 Install `docker-compose` if necessary:
@@ -37,7 +63,12 @@ Prime sources configuration options from two locations:
 - Argument passed to the `slack` command:
     - `--token`: API key to authenticate with the Slack RTM API.
 
-To create and populate a configuration file in the user's home folder:
+To create and populate a configuration file in the user's home folder:  
+**With virtualenv**:
+```
+(env)$ prime init
+```
+**With Docker**:
 ```
 $ docker-compose run --rm prime init
 ```
