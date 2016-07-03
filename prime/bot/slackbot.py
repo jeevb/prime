@@ -29,7 +29,7 @@ class SlackBot(GenericBot):
             if TARGETING_ME_RE.match(message) is not None:
                 user = event.get('user')
                 response_prefix = (
-                    '@{}: '.format(self._get_user_name(user))
+                    '<@{}>: '.format(user)
                     if user else None
                 )
                 return channel, _message, response_prefix
