@@ -8,8 +8,14 @@ from argh import arg
 from argh.dispatching import dispatch_commands
 from collections import OrderedDict
 from prime.api.notify import PrimeNotifyAPI
-from prime.bot.slackbot import SlackBot
-from prime.bot.loaders import USER_DIR, USER_COMMANDS_DIR, USER_LISTENERS_DIR
+from prime.bot.constants import OWNER_GROUP, ADMIN_GROUP
+from prime.bot.groups import GroupsMgr
+from prime.slack.bot import SlackBot
+from prime.storage.local_storage import (
+    USER_DIR,
+    USER_COMMANDS_DIR,
+    USER_LISTENERS_DIR
+)
 
 CONFIG_FILE_PATH = os.path.join(USER_DIR, 'config.yml')
 DEFAULT_CONFIG = OrderedDict([
@@ -88,5 +94,11 @@ def slack(token=None):
         except KeyboardInterrupt:
             bot.stop()
 
+def createsuperuser(user):
+    mgr = GroupsMgr()
+    mgr.add_user_to_group(user, OWNER_GROUP)
+    mgr.add_user_to_group(user, ADMIN_GROUP)
+    print(user, 'added as a superuser.', file=sys.stderr)
+
 if __name__ == '__main__':
-    dispatch_commands([init, notify, slack])
+    dispatch_commands([init, notify, slack, createsuperuser])

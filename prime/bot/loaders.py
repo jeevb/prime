@@ -3,11 +3,14 @@ import os
 import re
 import sys
 
+from prime.storage.local_storage import (
+    USER_DIR,
+    USER_COMMANDS_DIR,
+    USER_LISTENERS_DIR
+)
+
 PACKAGE_RE = re.compile(r'^(?P<package>.+)\.py$')
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-USER_DIR = os.path.expanduser(os.path.join('~', '.prime'))
-USER_COMMANDS_DIR = os.path.join(USER_DIR, 'commands')
-USER_LISTENERS_DIR = os.path.join(USER_DIR, 'listeners')
 COMMAND_DIRS = [
     ('prime_default_commands', os.path.join(BASE_DIR, 'commands')),
     ('prime_user_commands', USER_COMMANDS_DIR)

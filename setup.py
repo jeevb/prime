@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='prime',
-    version='1.0.0',
+    version='1.1.0',
     url='https://bitbucket.org/jeev/prime',
     author='Sanjeev Balakrishnan',
     author_email='me@jeev.io',
@@ -14,12 +14,12 @@ setup(
         'argh==0.26.2',
         'cffi==1.7.0',
         'cryptography==1.4',
-        'docopt==0.6.2',
         'gevent==1.1.1',
         'greenlet==0.4.10',
         'idna==2.1',
         'inflection==0.3.1',
         'ndg-httpsclient==0.4.1',
+        'peewee==2.8.1',
         'pyasn1==0.1.9',
         'pycparser==2.14',
         'pyOpenSSL==16.0.0',

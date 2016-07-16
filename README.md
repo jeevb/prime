@@ -63,7 +63,8 @@ Prime sources configuration options from two locations:
 - Argument passed to the `slack` command:
     - `--token`: API key to authenticate with the Slack RTM API.
 
-To create and populate a configuration file in the user's home folder:  
+To create and populate a configuration file in the user's home folder with the necessary information to communicate with the Services master and Slack RTM API:
+
 **With virtualenv**:
 ```
 (env)$ prime init
@@ -72,7 +73,17 @@ To create and populate a configuration file in the user's home folder:
 ```
 $ docker-compose run --rm prime init
 ```
-and specify the necessary information to communicate with the Services master and Slack RTM API.
+
+To create a superuser for bot commands:
+
+**With virtualenv**:
+```
+(env)$ prime createsuperuser <userid>
+```
+**With Docker**:
+```
+$ docker-compose run --rm prime createsuperuser <userid>
+```
 
 
 # License

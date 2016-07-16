@@ -3,41 +3,36 @@ import sys
 import time
 
 from gevent import sleep
-from prime.bot.generics import GenericBot
-from prime.bot.query import Query
-from prime.bot.utils import SEPARATORS
+from prime.bot.bot import GenericBot
+from prime.slack.groups import SlackGroupsMgr
+from prime.slack.query import SlackQuery
 from slackclient import SlackClient
-
-TARGETING_ME_RE = re.compile(r'^prime[%s]+' % SEPARATORS, re.I)
 
 
 class SlackBot(GenericBot):
+    groups_mgr_class = SlackGroupsMgr
+
     def __init__(self, token, ping_interval=3):
         super(SlackBot, self).__init__()
         self._client = SlackClient(token)
         self._ping_interval = ping_interval
         self._last_ping = None
 
-    def _clean_message(self, event):
-        message = event.get('text')
-        if message:
-            _message = TARGETING_ME_RE.sub('', message)
-            channel = event.get('channel')
-            if channel.startswith('D'):
-                return channel, _message
-            # Require targeting in public channels
-            if TARGETING_ME_RE.match(message) is not None:
-                user = event.get('user')
-                response_prefix = (
-                    '<@{}>: '.format(user)
-                    if user else None
-                )
-                return channel, _message, response_prefix
-
     def _handle_message(self, event):
-        query_args = self._clean_message(event)
-        if query_args:
-            return self._on_query(Query(*query_args))
+        message = event.get('text')
+        user = event.get('user')
+        # Handle case of edited message
+        event_message = event.get('message')
+        if not message and event_message:
+            message = event_message.get('text')
+            user = event_message.get('user')
+        if not message:
+            return
+        channel = event.get('channel')
+        query = SlackQuery(self._get_user(user),
+                           self._get_channel(channel),
+                           message)
+        return self._on_query(query)
 
     def _handle_user_change(self, event):
         user_data = event.get('user')
@@ -91,11 +86,6 @@ class SlackBot(GenericBot):
     def _get_user(self, user):
         return self._client.server.users.find(user)
 
-    def _get_user_name(self, user):
-        obj = self._get_user(user)
-        if obj:
-            return obj.name
-
     def _add_channel(self, *args, **kwargs):
         self._client.server.attach_channel(*args, **kwargs)
 
@@ -113,11 +103,6 @@ class SlackBot(GenericBot):
 
     def _get_channel(self, channel):
         return self._client.server.channels.find(channel)
-
-    def _get_channel_name(self, channel):
-        obj = self._get_channel(channel)
-        if obj:
-            return obj.name
 
     def _poll(self):
         if not self._client.rtm_connect():
