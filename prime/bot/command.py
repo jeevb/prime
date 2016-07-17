@@ -1,12 +1,24 @@
+import functools
 import inflection
 import re
 import shlex
+import sys
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from gettext import gettext as _
+from gevent import Greenlet, with_timeout
 from prime.bot.exceptions import CommandExit, CommandPrint
 from prime.bot.loaders import load_commands
-from prime.bot.constants import SEPARATORS, COMMAND_ARGS, COMMAND_DESC
+from prime.bot.constants import (
+    SEPARATORS,
+    COMMAND_ARGS,
+    COMMAND_DESC,
+    COMMAND_TRIGGERS,
+    COMMAND_TIMEOUT,
+    COMMAND_DMONLY,
+    COMMAND_USER_GROUPS,
+    COMMAND_CHANNEL_GROUPS
+)
 
 
 class CommandParser(ArgumentParser):
@@ -46,23 +58,20 @@ class CommandParser(ArgumentParser):
 
 class Command(object):
     manager = None
-    triggers = None
-    direct_message_only = False
-    required_user_groups = None
-    required_channel_groups = None
 
     def __init__(self):
         super(Command, self).__init__()
         # Initialize command parser
-        self._parser = CommandParser(prog=self.prog.lower())
-        for kwargs in getattr(self.__class__, COMMAND_ARGS, []):
+        self._parser = CommandParser(prog=self.prog)
+        for kwargs in getattr(self, COMMAND_ARGS, []):
             args = kwargs.pop('option_strings')
             self._parser.add_argument(*args, **kwargs)
 
         # Initialize command pattern
         prefix = [self.prog]
-        if self.triggers is not None:
-            prefix += list(self.triggers)
+        additional_triggers = getattr(self, COMMAND_TRIGGERS, None)
+        if additional_triggers is not None:
+            prefix += list(additional_triggers)
         self._pattern = re.compile(
             r'^(%s)[%s]*' % (
                 '|'.join(inflection.underscore(i) for i in prefix),
@@ -91,6 +100,22 @@ class Command(object):
     def description(self):
         return getattr(self, COMMAND_DESC, self.prog)
 
+    @property
+    def timeout(self):
+        return getattr(self, COMMAND_TIMEOUT, None)
+
+    @property
+    def direct_message_only(self):
+        return getattr(self, COMMAND_DMONLY, False)
+
+    @property
+    def user_groups(self):
+        return getattr(self, COMMAND_USER_GROUPS, None)
+
+    @property
+    def channel_groups(self):
+        return getattr(self, COMMAND_CHANNEL_GROUPS, None)
+
     def handle(self, query, args):
         raise NotImplementedError(
             '%r should implement the `handle` method.'
@@ -117,10 +142,10 @@ class CommandMgr(object):
             query.is_direct_message
         ) and self.bot.groups.is_authorized_user(
             query.user,
-            cmd.required_user_groups
+            cmd.user_groups
         ) and self.bot.groups.is_authorized_channel(
             query.channel,
-            cmd.required_channel_groups
+            cmd.channel_groups
         )
 
     def _load_commands(self):
@@ -130,6 +155,12 @@ class CommandMgr(object):
             cmd.manager = self
             self._commands.add(cmd)
         print('[CommandMgr] {} command(s) loaded.'.format(len(self._commands)))
+
+    def _on_command_error(self, exc):
+        if isinstance(e, gevent.Greenlet):
+            e = e.exception
+        # TODO(jeev): Implement logger to handle these errors
+        print(e, file=sys.stderr)
 
     def handle(self, query):
         if not query.is_valid:
@@ -148,6 +179,17 @@ class CommandMgr(object):
             except CommandExit:
                 pass
             else:
-                cmd.handle(query, args)
+                func = (
+                    functools.partial(with_timeout,
+                                      cmd.timeout,
+                                      cmd.handle,
+                                      timeout_value=None)
+                    if cmd.timeout is not None
+                    else cmd.handle
+                )
+                # Spawn a greenlet to handle command
+                g = Greenlet(func, query, args)
+                g.link_exception(self._on_command_error)
+                g.start()
             finally:
                 break

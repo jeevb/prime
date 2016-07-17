@@ -1,9 +1,10 @@
 from prime.bot.command import Command
-from prime.bot.decorators import arg, description
+from prime.bot.decorators import arg, description, user_group
 from prime.bot.exceptions import InvalidEntity
 from prime.bot.constants import ADMIN_GROUP
 
 
+@user_group(ADMIN_GROUP)
 @description('Adds/Removes user(s) to/from group.')
 @arg('-g', '--group', required=True,
      help='Group to add user(s) to or remove from.')
@@ -11,8 +12,6 @@ from prime.bot.constants import ADMIN_GROUP
      help='Remove users from group instead.')
 @arg('users', help='Users to add to (or remove from) group.', nargs='+')
 class Usermod(Command):
-    required_user_groups = (ADMIN_GROUP,)
-
     def handle(self, query, args):
         handler = (
             self.bot.groups.add_user_to_group
@@ -39,6 +38,7 @@ class Usermod(Command):
             )
 
 
+@user_group(ADMIN_GROUP)
 @description('Lists user groups.')
 @arg('-u', '--user', help='List groups for this user.')
 class Usergroups(Command):

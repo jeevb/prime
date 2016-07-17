@@ -1,11 +1,11 @@
 from prime.bot.command import Command
-from prime.bot.decorators import description
+from prime.bot.decorators import description, trigger, timeout
 
 
+@timeout(10)
+@trigger('commands')
 @description('Shows a list of commands.')
 class Help(Command):
-    triggers = ('commands',)
-
     def get_usable_commands(self, query):
         template = '{:15s}\t{:60s}'
         yield template.format('Command', 'Description')
