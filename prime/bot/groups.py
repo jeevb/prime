@@ -1,6 +1,6 @@
 from collections import defaultdict
 from peewee import DoesNotExist
-from prime.bot.constants import OWNER_GROUP
+from prime.bot.constants import OWNER_GROUP, ADMIN_GROUP
 from prime.bot.models import User, Channel, Group, UserGroups, ChannelGroups
 from prime.storage.database import PRIME_DB as db
 
@@ -25,7 +25,6 @@ class GroupsMgr(object):
                     self._db_cache[entity_type][entity.name].add(group.name)
 
     def _add_to_group(self, entity_type, entity, group):
-        group = group.lower()
         _entity, _ = entity_type.get_or_create(name=entity)
         _group, _ = Group.get_or_create(name=group)
         if _group in _entity.groups:
@@ -35,7 +34,6 @@ class GroupsMgr(object):
         return True
 
     def _remove_from_group(self, entity_type, entity, group):
-        group = group.lower()
         try:
             _entity = entity_type.get(entity_type.name == entity)
             _group = Group.get(Group.name == group)
@@ -47,7 +45,7 @@ class GroupsMgr(object):
             return True
 
     def _in_group(self, entity_type, entity, group):
-        return group.lower() in self._db_cache[entity_type][entity]
+        return group in self._db_cache[entity_type][entity]
 
     def _list_groups(self, entity_type, entity=None):
         for name, groups in self._db_cache[entity_type].items():
@@ -55,7 +53,7 @@ class GroupsMgr(object):
                 yield name, groups
 
     def _is_authorized(self, entity_type, entity, groups):
-        if groups is not None:
+        if groups:
             for group in groups:
                 if self._in_group(entity_type, entity, group):
                     break
@@ -87,11 +85,23 @@ class GroupsMgr(object):
     def list_channel_groups(self, channel=None):
         return self._list_groups(Channel, channel)
 
+    def can_modify_group(self, user, group):
+        if group not in (OWNER_GROUP, ADMIN_GROUP,):
+            if self.is_admin(user) or self.user_in_group(user, group):
+                return True;
+        return self.is_owner(user)
+
+    def is_owner(self, user):
+        return self.user_in_group(user, OWNER_GROUP)
+
+    def is_admin(self, user):
+        return self.user_in_group(user, ADMIN_GROUP)
+
     def is_authorized_user(self, user, groups):
-        return (
-            self.user_in_group(user, OWNER_GROUP) or
-            self._is_authorized(User, user, groups)
-        )
+        if not OWNER_GROUP in (groups or []):
+            if self.is_admin(user) or self._is_authorized(User, user, groups):
+                return True
+        return self.is_owner(user)
 
     def is_authorized_channel(self, channel, groups):
         return self._is_authorized(Channel, channel, groups)

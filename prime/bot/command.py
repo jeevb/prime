@@ -157,7 +157,7 @@ class CommandMgr(object):
         print('[CommandMgr] {} command(s) loaded.'.format(len(self._commands)))
 
     def _on_command_error(self, exc):
-        if isinstance(e, gevent.Greenlet):
+        if isinstance(e, Greenlet):
             e = e.exception
         # TODO(jeev): Implement logger to handle these errors
         print(e, file=sys.stderr)

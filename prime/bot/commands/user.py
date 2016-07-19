@@ -4,15 +4,18 @@ from prime.bot.exceptions import InvalidEntity
 from prime.bot.constants import ADMIN_GROUP
 
 
-@user_group(ADMIN_GROUP)
 @description('Adds/Removes user(s) to/from group.')
-@arg('-g', '--group', required=True,
+@arg('-g', '--group', required=True, type=str.lower,
      help='Group to add user(s) to or remove from.')
 @arg('-r', '--remove', action='store_true', default=False,
      help='Remove users from group instead.')
 @arg('users', help='Users to add to (or remove from) group.', nargs='+')
 class Usermod(Command):
     def handle(self, query, args):
+        if not self.bot.groups.can_modify_group(query.user, args.group):
+            query.reply('Only administrators or group members may do that.')
+            return
+
         handler = (
             self.bot.groups.add_user_to_group
             if not args.remove else
@@ -28,14 +31,15 @@ class Usermod(Command):
             query.reply(
                 '{0} is not a valid user identifier.'.format(e.what))
         else:
-            query.reply(
-                'The following users have '
-                'been successfully {0} group "{1}": {2}'.format(
-                    'removed from' if args.remove else 'added to',
-                    args.group.lower(),
-                    ', '.join(added_or_removed)
+            if added_or_removed:
+                query.reply(
+                    'The following users have '
+                    'been successfully {0} group "{1}": {2}'.format(
+                        'removed from' if args.remove else 'added to',
+                        args.group.lower(),
+                        ', '.join(added_or_removed)
+                    )
                 )
-            )
 
 
 @user_group(ADMIN_GROUP)

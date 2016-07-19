@@ -6,6 +6,7 @@ SEPARATORS = re.escape(',.:;!? ')
 ## Mandatory group definitions
 ##
 
+# Privileged groups
 OWNER_GROUP = 'owner'
 ADMIN_GROUP = 'admin'
 
