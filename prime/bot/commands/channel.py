@@ -4,12 +4,12 @@ from prime.bot.exceptions import InvalidEntity
 from prime.bot.constants import ADMIN_GROUP
 
 
-@description('Adds/Removes channel(s) to/from group.')
 @arg('-g', '--group', required=True, type=str.lower,
      help='Group to add channel(s) to or remove from.')
 @arg('-r', '--remove', action='store_true', default=False,
      help='Remove channels from group instead.')
 @arg('channels', help='Channels to add to (or remove from) group.', nargs='+')
+@description('Adds/Removes channel(s) to/from group.')
 class Channelmod(Command):
     def handle(self, query, args):
         if not self.bot.groups.can_modify_group(query.user, args.group):
@@ -43,8 +43,8 @@ class Channelmod(Command):
 
 
 @user_group(ADMIN_GROUP)
-@description('Lists channel groups.')
 @arg('-c', '--channel', help='List groups for this channel.')
+@description('Lists channel groups.')
 class Channelgroups(Command):
     def get_channel_groups(self, channel):
         for i in self.bot.groups.list_channel_groups(channel):

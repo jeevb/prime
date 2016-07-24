@@ -14,7 +14,8 @@ from prime.slack.bot import SlackBot
 from prime.storage.local_storage import (
     USER_DIR,
     USER_COMMANDS_DIR,
-    USER_LISTENERS_DIR
+    USER_LISTENERS_DIR,
+    USER_JOBS_DIR
 )
 
 CONFIG_FILE_PATH = os.path.join(USER_DIR, 'config.yml')
@@ -36,7 +37,12 @@ def get_config():
 
 def init():
     # Make user configuration directory
-    for d in (USER_DIR, USER_COMMANDS_DIR, USER_LISTENERS_DIR,):
+    for d in (
+            USER_DIR,
+            USER_COMMANDS_DIR,
+            USER_LISTENERS_DIR,
+            USER_JOBS_DIR,
+    ):
         if not os.path.exists(d):
             os.makedirs(d)
 
@@ -91,7 +97,7 @@ def slack(token=None):
         try:
             bot.start()
             bot.join()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, SystemExit):
             bot.stop()
 
 def createsuperuser(user):

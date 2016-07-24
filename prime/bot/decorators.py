@@ -1,3 +1,5 @@
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 from prime.bot.constants import (
     COMMAND_ARGS,
     COMMAND_DESC,
@@ -5,8 +7,14 @@ from prime.bot.constants import (
     COMMAND_TIMEOUT,
     COMMAND_DMONLY,
     COMMAND_USER_GROUPS,
-    COMMAND_CHANNEL_GROUPS
+    COMMAND_CHANNEL_GROUPS,
+    JOB_TRIGGER
 )
+
+
+##
+## Command decorators
+##
 
 def arg(*args, **kwargs):
     def wrapper(cls):
@@ -59,5 +67,24 @@ def channel_group(*groups):
         for group in groups:
             channel_groups.add(group)
         setattr(cls, COMMAND_CHANNEL_GROUPS, channel_groups)
+        return cls
+    return wrapper
+
+
+##
+## Job decorators
+##
+
+def interval(*args, **kwargs):
+    def wrapper(cls):
+        trigger = IntervalTrigger(*args, **kwargs)
+        setattr(cls, JOB_TRIGGER, trigger)
+        return cls
+    return wrapper
+
+def cron(*args, **kwargs):
+    def wrapper(cls):
+        trigger = CronTrigger(*args, **kwargs)
+        setattr(cls, JOB_TRIGGER, trigger)
         return cls
     return wrapper

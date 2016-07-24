@@ -4,12 +4,12 @@ from prime.bot.exceptions import InvalidEntity
 from prime.bot.constants import ADMIN_GROUP
 
 
-@description('Adds/Removes user(s) to/from group.')
 @arg('-g', '--group', required=True, type=str.lower,
      help='Group to add user(s) to or remove from.')
 @arg('-r', '--remove', action='store_true', default=False,
      help='Remove users from group instead.')
 @arg('users', help='Users to add to (or remove from) group.', nargs='+')
+@description('Adds/Removes user(s) to/from group.')
 class Usermod(Command):
     def handle(self, query, args):
         if not self.bot.groups.can_modify_group(query.user, args.group):
@@ -43,8 +43,8 @@ class Usermod(Command):
 
 
 @user_group(ADMIN_GROUP)
-@description('Lists user groups.')
 @arg('-u', '--user', help='List groups for this user.')
+@description('Lists user groups.')
 class Usergroups(Command):
     def get_user_groups(self, user):
         for i in self.bot.groups.list_user_groups(user):

@@ -2,18 +2,21 @@ from gevent import Greenlet, sleep, spawn_raw
 from gevent.event import Event
 from prime.bot.command import CommandMgr
 from prime.bot.listener import ListenerMgr
+from prime.bot.job import JobsMgr
 from prime.bot.groups import GroupsMgr
 
 
 class GenericBot(object):
     command_mgr_class = CommandMgr
     listener_mgr_class = ListenerMgr
+    jobs_mgr_class = JobsMgr
     groups_mgr_class = GroupsMgr
 
     def __init__(self):
         self._greenlet = None
         self._command_mgr = self.command_mgr_class(self)
         self._listener_mgr = self.listener_mgr_class(self)
+        self._jobs_mgr = self.jobs_mgr_class(self)
         self._groups_mgr = self.groups_mgr_class()
         self._stop_event = Event()
         self._stop_event.set()
