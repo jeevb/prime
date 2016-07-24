@@ -3,7 +3,7 @@ from apscheduler.triggers.cron import CronTrigger
 from prime.bot.constants import (
     COMMAND_ARGS,
     COMMAND_DESC,
-    COMMAND_TRIGGERS,
+    COMMAND_ALIASES,
     COMMAND_TIMEOUT,
     COMMAND_DMONLY,
     COMMAND_USER_GROUPS,
@@ -31,12 +31,12 @@ def description(text):
         return cls
     return wrapper
 
-def trigger(*what):
+def alias(*what):
     def wrapper(cls):
-        triggers = getattr(cls, COMMAND_TRIGGERS, set())
+        aliases = getattr(cls, COMMAND_ALIASES, set())
         for val in what:
-            triggers.add(val)
-        setattr(cls, COMMAND_TRIGGERS, triggers)
+            aliases.add(val)
+        setattr(cls, COMMAND_ALIASES, aliases)
         return cls
     return wrapper
 

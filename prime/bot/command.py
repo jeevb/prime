@@ -15,7 +15,7 @@ from prime.bot.constants import (
     SEPARATORS,
     COMMAND_ARGS,
     COMMAND_DESC,
-    COMMAND_TRIGGERS,
+    COMMAND_ALIASES,
     COMMAND_TIMEOUT,
     COMMAND_DMONLY,
     COMMAND_USER_GROUPS,
@@ -69,9 +69,9 @@ class Command(Module):
 
         # Initialize command pattern
         prefix = [self.prog]
-        additional_triggers = getattr(self, COMMAND_TRIGGERS, None)
-        if additional_triggers is not None:
-            prefix += list(additional_triggers)
+        aliases = getattr(self, COMMAND_ALIASES, None)
+        if aliases is not None:
+            prefix += list(aliases)
         self._pattern = re.compile(
             r'^(%s)[%s]*' % (
                 '|'.join(inflection.underscore(i) for i in prefix),

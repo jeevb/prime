@@ -1,9 +1,9 @@
 from prime.bot.command import Command
-from prime.bot.decorators import description, trigger, timeout
+from prime.bot.decorators import description, alias, timeout
 
 
 @timeout(10)
-@trigger('commands')
+@alias('commands')
 @description('Shows a list of commands.')
 class Help(Command):
     def get_usable_commands(self, query):

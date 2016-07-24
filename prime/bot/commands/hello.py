@@ -1,9 +1,9 @@
 from prime.bot.command import Command
-from prime.bot.decorators import description, trigger, timeout
+from prime.bot.decorators import description, alias, timeout
 
 
 @timeout(10)
-@trigger('hi', 'hey', 'yo', 'hola')
+@alias('hi', 'hey', 'yo', 'hola')
 @description('Say hello.')
 class Hello(Command):
     def handle(self, query, args):
