@@ -1,15 +1,10 @@
 from apscheduler.schedulers.gevent import GeventScheduler
 from prime.bot.constants import BASE_DIR_JOIN, JOB_TRIGGER
-from prime.bot.manager import ModuleMgr
+from prime.bot.manager import Module, ModuleMgr
 from prime.storage.local_storage import USER_JOBS_DIR
 
-class Job(object):
-    manager = None
 
-    @property
-    def bot(self):
-        return self.manager.bot
-
+class Job(Module):
     @property
     def trigger(self):
         return getattr(self, JOB_TRIGGER, None)

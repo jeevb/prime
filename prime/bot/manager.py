@@ -23,6 +23,20 @@ def load(dirnames):
             spec.loader.exec_module(module)
 
 
+class Module(object):
+    def __init__(self, manager):
+        super(Module, self).__init__()
+        self._manager = manager
+
+    @property
+    def manager(self):
+        return self._manager
+
+    @property
+    def bot(self):
+        return self.manager.bot
+
+
 class ModuleMgr(object):
     module_class = None
     modules_specs = None
@@ -56,8 +70,7 @@ class ModuleMgr(object):
     def _load_modules(self):
         load(self._get_module_specs())
         for module_subclass in self._get_subclasses():
-            module = module_subclass()
-            module.manager = self
+            module = module_subclass(self)
             self._modules.add(module)
         print('[{0}] {1} {2}(s) loaded.'.format(
             self.__class__.__name__,

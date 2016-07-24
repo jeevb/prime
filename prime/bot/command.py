@@ -9,7 +9,7 @@ from gettext import gettext as _
 from gevent import Greenlet, with_timeout
 from prime.bot.exceptions import CommandExit, CommandPrint
 from prime.storage.local_storage import USER_COMMANDS_DIR
-from prime.bot.manager import ModuleMgr
+from prime.bot.manager import Module, ModuleMgr
 from prime.bot.constants import (
     BASE_DIR_JOIN,
     SEPARATORS,
@@ -58,11 +58,9 @@ class CommandParser(ArgumentParser):
             _('%(usage)s\n%(prog)s: Error: %(message)s\n') % args)
 
 
-class Command(object):
-    manager = None
-
-    def __init__(self):
-        super(Command, self).__init__()
+class Command(Module):
+    def __init__(self, manager):
+        super(Command, self).__init__(manager)
         # Initialize command parser
         self._parser = CommandParser(prog=self.prog)
         for kwargs in getattr(self, COMMAND_ARGS, []):
@@ -89,10 +87,6 @@ class Command(object):
     @property
     def pattern(self):
         return self._pattern
-
-    @property
-    def bot(self):
-        return self.manager.bot
 
     @property
     def prog(self):

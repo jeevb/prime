@@ -1,15 +1,9 @@
 from prime.bot.constants import BASE_DIR_JOIN
-from prime.bot.manager import ModuleMgr
+from prime.bot.manager import Module, ModuleMgr
 from prime.storage.local_storage import USER_LISTENERS_DIR
 
 
-class Listener(object):
-    manager = None
-
-    @property
-    def bot(self):
-        return self.manager.bot
-
+class Listener(Module):
     def handle(self, query):
         raise NotImplementedError(
             '%r should implement the `handle` method.'
