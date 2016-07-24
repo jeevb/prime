@@ -2,8 +2,9 @@ import re
 import sys
 import time
 
-from gevent import sleep
+from gevent import sleep, spawn_raw
 from prime.bot.bot import GenericBot
+from prime.bot.constants import SEPARATORS
 from prime.slack.groups import SlackGroupsMgr
 from prime.slack.query import SlackQuery
 from slackclient import SlackClient
@@ -17,6 +18,26 @@ class SlackBot(GenericBot):
         self._client = SlackClient(token)
         self._ping_interval = ping_interval
         self._last_ping = None
+        # Pattern to determine if incoming messages are targeting bot
+        self._targeting_me_re = None
+
+    @property
+    def _attrs(self):
+        return self._client.server.login_data['self']
+
+    def _on_connect(self):
+        # Cache pattern to determine if incoming message is targeting bot
+        link = re.escape('<@{0}>'.format(self._attrs.get('id')))
+        name = re.escape(self._attrs.get('name'))
+        self._targeting_me_re = re.compile(
+            r'^(%s|%s)[%s]+' % (link, name, SEPARATORS), re.I)
+
+    def _is_targeting_me(self, message):
+        return (
+            (self._targeting_me_re.sub('', message), True)
+            if self._targeting_me_re.match(message) is not None
+            else (message, False)
+        )
 
     def _handle_message(self, event):
         message = event.get('text')
@@ -28,10 +49,12 @@ class SlackBot(GenericBot):
             user = event_message.get('user')
         if not message:
             return
+        message, is_targeting_me = self._is_targeting_me(message)
         channel = event.get('channel')
-        query = SlackQuery(self._get_user(user),
-                           self._get_channel(channel),
-                           message)
+        query = SlackQuery(user=self._get_user(user),
+                           channel=self._get_channel(channel),
+                           message=message)
+        query.is_targeting_me = is_targeting_me
         return self._on_query(query)
 
     def _handle_user_change(self, event):
@@ -71,7 +94,7 @@ class SlackBot(GenericBot):
         event_type = event.get('type')
         handler = getattr(self, '_handle_{}'.format(event_type), None)
         if handler:
-            handler(event)
+            spawn_raw(handler, event)
 
     def _add_user(self, *args, **kwargs):
         self._client.server.attach_user(*args, **kwargs)
@@ -109,6 +132,7 @@ class SlackBot(GenericBot):
             print('Could not connect to Slack\'s RTM API.',
                   file=sys.stderr)
             self.stop()
+        self._on_connect()
         while True:
             try:
                 data = self._client.rtm_read()

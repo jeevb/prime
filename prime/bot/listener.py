@@ -1,3 +1,4 @@
+from gevent import spawn_raw
 from prime.bot.constants import BASE_DIR_JOIN
 from prime.bot.manager import Module, ModuleMgr
 from prime.storage.local_storage import USER_LISTENERS_DIR
@@ -20,4 +21,4 @@ class ListenerMgr(ModuleMgr):
 
     def handle(self, query):
         for listener in self._modules:
-            listener.handle(query)
+            spawn_raw(listener.handle, query)

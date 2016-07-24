@@ -2,6 +2,8 @@ import random
 
 
 class Query(object):
+    is_targeting_me = False
+
     def __init__(self, user, channel, message):
         super(Query, self).__init__()
         self._user = user
@@ -24,10 +26,6 @@ class Query(object):
     @property
     def is_direct_message(self):
         return self.user == self.channel
-
-    @property
-    def is_valid(self):
-        return True
 
     @property
     def send_handler(self):

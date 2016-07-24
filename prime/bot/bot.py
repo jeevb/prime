@@ -1,4 +1,4 @@
-from gevent import Greenlet, sleep, spawn_raw
+from gevent import Greenlet, sleep
 from gevent.event import Event
 from prime.bot.command import CommandMgr
 from prime.bot.listener import ListenerMgr
@@ -61,4 +61,4 @@ class GenericBot(object):
 
     def _on_query(self, query):
         query.send_handler = self._send
-        spawn_raw(self._listener_mgr.handle, query)
+        self._listener_mgr.handle(query)

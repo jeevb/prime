@@ -7,6 +7,7 @@ import yaml
 from argh import arg
 from argh.dispatching import dispatch_commands
 from collections import OrderedDict
+from gevent.monkey import patch_all
 from prime.api.notify import PrimeNotifyAPI
 from prime.bot.constants import OWNER_GROUP, ADMIN_GROUP
 from prime.bot.groups import GroupsMgr
@@ -17,6 +18,8 @@ from prime.storage.local_storage import (
     USER_LISTENERS_DIR,
     USER_JOBS_DIR
 )
+
+patch_all()
 
 CONFIG_FILE_PATH = os.path.join(USER_DIR, 'config.yml')
 DEFAULT_CONFIG = OrderedDict([
@@ -87,7 +90,6 @@ def slack(token=None):
         '  / /_/ / ___/ / __ `__ \/ _ \\\n'
         ' / ____/ /  / / / / / / /  __/\n'
         '/_/   /_/  /_/_/ /_/ /_/\___/\n\n',
-        file=sys.stderr
     )
     token = token or get_config().get('slack_token')
     if not token:
@@ -104,7 +106,7 @@ def createsuperuser(user):
     mgr = GroupsMgr()
     mgr.add_user_to_group(user, OWNER_GROUP)
     mgr.add_user_to_group(user, ADMIN_GROUP)
-    print(user, 'added as a superuser.', file=sys.stderr)
+    print(user, 'added as a superuser.')
 
 if __name__ == '__main__':
     dispatch_commands([init, notify, slack, createsuperuser])
