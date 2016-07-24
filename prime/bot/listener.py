@@ -1,4 +1,6 @@
-from prime.bot.loaders import load_listeners
+from prime.bot.constants import BASE_DIR_JOIN
+from prime.bot.manager import ModuleMgr
+from prime.storage.local_storage import USER_LISTENERS_DIR
 
 
 class Listener(object):
@@ -15,22 +17,13 @@ class Listener(object):
         )
 
 
-class ListenerMgr(object):
-    def __init__(self, bot):
-        print('Initializing ListenerMgr...')
-        self.bot = bot
-        self._listeners = set()
-        self._load_listeners()
-
-    def _load_listeners(self):
-        load_listeners()
-        for listener_class in Listener.__subclasses__():
-            listener = listener_class()
-            listener.manager = self
-            self._listeners.add(listener)
-        print('[ListenerMgr] {} listener(s) loaded.'.format(
-            len(self._listeners)))
+class ListenerMgr(ModuleMgr):
+    module_class = Listener
+    module_specs = [
+        ('prime_default_listeners', BASE_DIR_JOIN('listeners')),
+        ('prime_user_listeners', USER_LISTENERS_DIR),
+    ]
 
     def handle(self, query):
-        for listener in self._listeners:
+        for listener in self._modules:
             listener.handle(query)

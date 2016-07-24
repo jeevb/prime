@@ -8,8 +8,10 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from gettext import gettext as _
 from gevent import Greenlet, with_timeout
 from prime.bot.exceptions import CommandExit, CommandPrint
-from prime.bot.loaders import load_commands
+from prime.storage.local_storage import USER_COMMANDS_DIR
+from prime.bot.manager import ModuleMgr
 from prime.bot.constants import (
+    BASE_DIR_JOIN,
     SEPARATORS,
     COMMAND_ARGS,
     COMMAND_DESC,
@@ -123,17 +125,16 @@ class Command(object):
         )
 
 
-class CommandMgr(object):
-    def __init__(self, bot):
-        super(CommandMgr, self).__init__()
-        print('Initializing CommandMgr...')
-        self.bot = bot
-        self._commands = set()
-        self._load_commands()
+class CommandMgr(ModuleMgr):
+    module_class = Command
+    module_specs = [
+        ('prime_default_commands', BASE_DIR_JOIN('commands')),
+        ('prime_user_commands', USER_COMMANDS_DIR),
+    ]
 
     @property
     def commands(self):
-        return self._commands
+        return self._modules
 
     def is_authorized(self, cmd, query):
         # Validate user/channel for command use
@@ -148,24 +149,10 @@ class CommandMgr(object):
             cmd.channel_groups
         )
 
-    def _load_commands(self):
-        load_commands()
-        for cmd_class in Command.__subclasses__():
-            cmd = cmd_class()
-            cmd.manager = self
-            self._commands.add(cmd)
-        print('[CommandMgr] {} command(s) loaded.'.format(len(self._commands)))
-
-    def _on_command_error(self, exc):
-        if isinstance(e, Greenlet):
-            e = e.exception
-        # TODO(jeev): Implement logger to handle these errors
-        print(e, file=sys.stderr)
-
     def handle(self, query):
         if not query.is_valid:
             return
-        for cmd in self._commands:
+        for cmd in self._modules:
             match = cmd.pattern.search(query.message)
             if not match:
                 continue
@@ -189,7 +176,7 @@ class CommandMgr(object):
                 )
                 # Spawn a greenlet to handle command
                 g = Greenlet(func, query, args)
-                g.link_exception(self._on_command_error)
+                g.link_exception(self._on_error)
                 g.start()
             finally:
                 break

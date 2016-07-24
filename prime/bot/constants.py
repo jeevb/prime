@@ -1,4 +1,17 @@
+import os
 import re
+
+##
+## Loading modules
+##
+
+PACKAGE_RE = re.compile(r'^(?P<package>.+)\.py$')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR_JOIN = lambda *p : os.path.join(BASE_DIR, *p)
+
+##
+## Query parsing
+##
 
 SEPARATORS = re.escape(',.:;!? ')
 
