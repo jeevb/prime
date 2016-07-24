@@ -1,4 +1,5 @@
 import importlib
+import importlib.machinery
 import os
 import re
 import sys
@@ -15,12 +16,13 @@ def load(dirnames):
             if not match:
                 continue
             module_name = '{}.{}'.format(module_root, match.group('package'))
-            spec = importlib.util.spec_from_file_location(
-                module_name,
-                os.path.join(dirname, match.group())
-            )
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+            file_loc = module_name, os.path.join(dirname, match.group())
+            if sys.version_info < (3, 5):
+                importlib.machinery.SourceFileLoader(*file_loc).load_module()
+            else:
+                spec = importlib.util.spec_from_file_location(*file_loc)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
 
 
 class Module(object):

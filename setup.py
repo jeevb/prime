@@ -1,8 +1,13 @@
+import sys
+
 from setuptools import setup, find_packages
+
+if sys.version_info < (3, 4):
+    sys.exit('Prime requires at least Python 3.4!')
 
 setup(
     name='prime',
-    version='1.1.0',
+    version='1.2.0',
     url='https://bitbucket.org/jeev/prime',
     author='Sanjeev Balakrishnan',
     author_email='me@jeev.io',
