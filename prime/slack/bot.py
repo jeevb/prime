@@ -54,7 +54,7 @@ class SlackBot(GenericBot):
         query = SlackQuery(user=self._get_user(user),
                            channel=self._get_channel(channel),
                            message=message)
-        query.is_targeting_me = is_targeting_me
+        query.is_targeting_me = is_targeting_me or query.is_direct_message
         return self._on_query(query)
 
     def _handle_user_change(self, event):
