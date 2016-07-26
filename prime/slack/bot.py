@@ -150,5 +150,5 @@ class SlackBot(GenericBot):
             self._client.server.ping()
             self._last_ping = now
 
-    def _send(self, channel, message):
+    def send(self, channel, message):
         return self._client.rtm_send_message(channel, message)

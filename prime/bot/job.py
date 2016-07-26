@@ -1,5 +1,9 @@
 from apscheduler.schedulers.gevent import GeventScheduler
-from prime.bot.constants import BASE_DIR_JOIN, JOB_TRIGGER
+from prime.bot.constants import (
+    BASE_DIR_JOIN,
+    JOB_TRIGGER,
+    JOB_BROADCAST_GROUPS
+)
 from prime.bot.manager import Module, ModuleMgr
 from prime.storage.local_storage import USER_JOBS_DIR
 
@@ -8,6 +12,18 @@ class Job(Module):
     @property
     def trigger(self):
         return getattr(self, JOB_TRIGGER, None)
+
+    @property
+    def broadcast_groups(self):
+        return getattr(self, JOB_BROADCAST_GROUPS, [])
+
+    def broadcast(self):
+        message = self.handle()
+        if not message:
+            return
+        for channel in self.bot.groups.channels_in_groups(
+                *self.broadcast_groups):
+            self.bot.send(channel, message)
 
     def handle(self):
         raise NotImplementedError(
@@ -30,4 +46,9 @@ class JobsMgr(ModuleMgr):
 
     def _add_jobs(self):
         for module in self._modules:
-            self._scheduler.add_job(module.handle, trigger=module.trigger)
+            task = (
+                module.broadcast
+                if module.broadcast_groups else
+                module.handle
+            )
+            self._scheduler.add_job(task, trigger=module.trigger)

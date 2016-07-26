@@ -1,5 +1,7 @@
 import random
 
+from prime.bot.utils import code_block
+
 
 class Query(object):
     is_targeting_me = False
@@ -43,4 +45,4 @@ class Query(object):
         return self.reply(random.choice(choices))
 
     def reply_within_block(self, message):
-        return self.reply('\n```\n{0}\n```'.format(message))
+        return self.reply(code_block(message))

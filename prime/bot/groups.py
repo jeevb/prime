@@ -47,6 +47,11 @@ class GroupsMgr(object):
     def _in_group(self, entity_type, entity, group):
         return group in self._db_cache[entity_type][entity]
 
+    def _list_in_groups(self, entity_type, groups):
+        for entity, entity_groups in self._db_cache[entity_type].items():
+            if set(groups).intersection(entity_groups):
+                yield entity
+
     def _list_groups(self, entity_type, entity=None):
         for name, groups in self._db_cache[entity_type].items():
             if groups and (entity is None or entity == name):
@@ -78,6 +83,12 @@ class GroupsMgr(object):
 
     def channel_in_group(self, channel, group):
         return self._in_group(Channel, channel, group)
+
+    def users_in_groups(self, *groups):
+        return self._list_in_groups(User, groups)
+
+    def channels_in_groups(self, *groups):
+        return self._list_in_groups(Channel, groups)
 
     def list_user_groups(self, user=None):
         return self._list_groups(User, user)

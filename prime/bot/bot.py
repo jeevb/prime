@@ -25,6 +25,9 @@ class GenericBot(object):
     def groups(self):
         return self._groups_mgr
 
+    def handle_cmd(self, query):
+        self._command_mgr.handle(query)
+
     def start(self):
         self._stop_event.clear()
         if not self._greenlet:
@@ -39,9 +42,6 @@ class GenericBot(object):
         self._greenlet.kill()
         self._greenlet = None
 
-    def handle_cmd(self, query):
-        self._command_mgr.handle(query)
-
     def _run(self):
         while True:
             self._poll()
@@ -53,12 +53,12 @@ class GenericBot(object):
             % self.__class__.__name__
         )
 
-    def _send(self, channel, message):
+    def send(self, channel, message):
         raise NotImplementedError(
             '%r should implement the `_send` method.'
             % self.__class__.__name__
         )
 
     def _on_query(self, query):
-        query.send_handler = self._send
+        query.send_handler = self.send
         self._listener_mgr.handle(query)

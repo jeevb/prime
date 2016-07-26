@@ -8,7 +8,8 @@ from prime.bot.constants import (
     COMMAND_DMONLY,
     COMMAND_USER_GROUPS,
     COMMAND_CHANNEL_GROUPS,
-    JOB_TRIGGER
+    JOB_TRIGGER,
+    JOB_BROADCAST_GROUPS,
 )
 
 
@@ -86,5 +87,11 @@ def cron(*args, **kwargs):
     def wrapper(cls):
         trigger = CronTrigger(*args, **kwargs)
         setattr(cls, JOB_TRIGGER, trigger)
+        return cls
+    return wrapper
+
+def broadcast(*channel_groups):
+    def wrapper(cls):
+        setattr(cls, JOB_BROADCAST_GROUPS, channel_groups)
         return cls
     return wrapper
