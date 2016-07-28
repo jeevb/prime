@@ -62,12 +62,23 @@ class Command(Module):
     def __init__(self, manager):
         super(Command, self).__init__(manager)
         # Initialize command parser
-        self._parser = CommandParser(prog=self.prog)
+        self._parser = CommandParser(prog=self.prog,
+                                     description=self.description)
+        self.init_parser()
+
+        # Initialize command pattern
+        self._pattern = None
+        self.init_pattern()
+
+    # ===============
+    # Override these methods, if necessary
+    # ===============
+    def init_parser(self):
         for kwargs in getattr(self, COMMAND_ARGS, []):
             args = kwargs.pop('option_strings')
             self._parser.add_argument(*args, **kwargs)
 
-        # Initialize command pattern
+    def init_pattern(self):
         prefix = [self.prog]
         aliases = getattr(self, COMMAND_ALIASES, None)
         if aliases is not None:
