@@ -60,10 +60,10 @@ class SlackBot(GenericBot):
     def _handle_user_change(self, event):
         user_data = event.get('user')
         if user_data:
-            user_id = user.get('id')
-            tz = user.get('tz', 'unknown')
-            name = user.get('name')
-            real_name = user.get('real_name', name)
+            user_id = user_data.get('id')
+            tz = user_data.get('tz', 'unknown')
+            name = user_data.get('name')
+            real_name = user_data.get('real_name', name)
             if not self._update_user(name=name,
                                      id=user_id,
                                      real_name=real_name,
