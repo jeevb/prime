@@ -84,7 +84,7 @@ class Command(Module):
         if aliases is not None:
             prefix += list(aliases)
         self._pattern = re.compile(
-            r'^(%s)[%s]*' % (
+            r'^(%s)([%s]+)?' % (
                 '|'.join(inflection.underscore(i) for i in prefix),
                 SEPARATORS
             ),
