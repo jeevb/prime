@@ -48,10 +48,8 @@ def timeout(seconds):
     return wrapper
 
 def dm_only(cls):
-    def wrapper(*args, **kwargs):
-        setattr(cls, COMMAND_DMONLY, True)
-        return cls
-    return wrapper
+    setattr(cls, COMMAND_DMONLY, True)
+    return cls
 
 def user_group(*groups):
     def wrapper(cls):
