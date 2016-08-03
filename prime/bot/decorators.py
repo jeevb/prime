@@ -1,5 +1,6 @@
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
+from functools import wraps
 from prime.bot.constants import (
     COMMAND_ARGS,
     COMMAND_DESC,
@@ -12,6 +13,17 @@ from prime.bot.constants import (
     JOB_BROADCAST_GROUPS,
 )
 
+##
+## Command handler decorators
+##
+def reply_with_exception(func):
+    @wraps(func)
+    def wrapper(instance, query, args):
+        try:
+            func(instance, query, args)
+        except Exception as e:
+            query.reply_within_block('Error: {0}'.format(str(e)))
+    return wrapper
 
 ##
 ## Command decorators

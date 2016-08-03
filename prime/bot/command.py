@@ -167,7 +167,7 @@ class CommandMgr(ModuleMgr):
             try:
                 args, _ = cmd.parser.parse_known_args(argv)
             except CommandPrint as e:
-                query.reply_within_block(e.what)
+                query.reply_within_block(str(e))
             except CommandExit:
                 pass
             else:
