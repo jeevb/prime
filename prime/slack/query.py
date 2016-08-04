@@ -31,7 +31,7 @@ class SlackQuery(Query):
             first = True
             for val in iterable:
                 if val:
-                    yield transform(val, first)
+                    yield transform(val, first and not self.is_direct_message)
                     first = False
 
         message = strip(message)
