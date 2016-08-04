@@ -38,7 +38,7 @@ class Query(object):
         self._send_handler = value
 
     def reply(self, message):
-        if message and self.send_handler:
+        if self.send_handler:
             return self.send_handler(self.channel, message)
 
     def reply_with_one_of(self, *choices):

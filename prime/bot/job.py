@@ -20,8 +20,6 @@ class Job(Module):
 
     def broadcast(self):
         message = self.handle()
-        if not message:
-            return
         for channel in GroupsMgr.channels_in_groups(
                 self.bot.groups,
                 *self.broadcast_groups):

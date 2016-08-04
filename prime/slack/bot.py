@@ -5,6 +5,7 @@ import time
 from gevent import sleep, spawn_raw
 from prime.bot.bot import GenericBot
 from prime.bot.constants import SEPARATORS
+from prime.bot.utils import strip
 from prime.slack.groups import SlackGroupsMgr
 from prime.slack.query import SlackQuery
 from slackclient import SlackClient
@@ -151,4 +152,11 @@ class SlackBot(GenericBot):
             self._last_ping = now
 
     def send(self, channel, message):
-        return self._client.rtm_send_message(channel, message)
+        message = strip(message)
+        if isinstance(message, (str, bytes)):
+            if message:
+                self._client.rtm_send_message(channel, message)
+        elif hasattr(message, '__iter__'):
+            for chunk in message:
+                if chunk:
+                    self._client.rtm_send_message(channel, chunk)

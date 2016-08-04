@@ -1,4 +1,5 @@
 from prime.bot.query import Query
+from prime.bot.utils import strip
 
 
 class SlackQuery(Query):
@@ -23,6 +24,19 @@ class SlackQuery(Query):
         return self.channel.startswith('D')
 
     def reply(self, message):
-        if message and not self.is_direct_message:
-            message = '{0}: {1}'.format(self.user_link, message)
-        return super(SlackQuery, self).reply(message)
+        transform = lambda m, t: (
+            '{0}: {1}'.format(self.user_link, m) if m and t else m)
+
+        def from_iterable(iterable):
+            first = True
+            for val in iterable:
+                if val:
+                    yield transform(val, first)
+                    first = False
+
+        message = strip(message)
+        if isinstance(message, (str, bytes)):
+            if message:
+                return super(SlackQuery, self).reply(transform(message, True))
+        elif hasattr(message, '__iter__'):
+            return super(SlackQuery, self).reply(from_iterable(message))
