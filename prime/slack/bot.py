@@ -159,5 +159,5 @@ class SlackBot(GenericBot):
         elif hasattr(message, '__iter__'):
             for chunk in message:
                 if chunk:
-                    sleep(1)
+                    sleep(.5)
                     self._client.rtm_send_message(channel, chunk)
