@@ -37,6 +37,7 @@ class SlackQuery(Query):
         message = strip(message)
         if isinstance(message, (str, bytes)):
             if message:
-                return super(SlackQuery, self).reply(transform(message, True))
+                return super(SlackQuery, self).reply(
+                    transform(message, not self.is_direct_message))
         elif hasattr(message, '__iter__'):
             return super(SlackQuery, self).reply(from_iterable(message))
