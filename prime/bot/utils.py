@@ -1,3 +1,5 @@
+from itertools import chain, zip_longest
+
 def strip(message):
     def from_iterable(iterable):
         for val in iterable:
@@ -35,3 +37,28 @@ def code_block(message):
         return from_iterable(message)
 
 
+class PrettyList(list):
+    def columnify(self, cols, sep='\t', fillvalue=''):
+        # Map list to strings
+        str_list = list(map(str, self))
+
+        # Split list into columns
+        split_list = []
+        col_widths = []
+        rows, r = divmod(len(str_list), cols)
+        rows += (r != 0)
+        for i in range(rows):
+            split_list.append(str_list[i::rows])
+        for j in range(0, len(str_list), rows):
+            col_widths.append(max(len(elem) for elem in str_list[j:j+rows]))
+
+        # Print to pretty format
+        template = sep.join(['%-*s'] * cols)
+        for sublist in split_list:
+            yield template % (tuple(
+                chain.from_iterable(
+                    zip_longest(col_widths,
+                                sublist,
+                                fillvalue=fillvalue)
+                )
+            ))
