@@ -9,6 +9,8 @@ from prime.bot.utils import strip
 from prime.slack.groups import SlackGroupsMgr
 from prime.slack.query import SlackQuery
 from slackclient import SlackClient
+from slackclient._client import SlackNotConnected
+from slackclient._server import SlackConnectionError, SlackLoginError
 
 
 class SlackBot(GenericBot):
@@ -128,22 +130,27 @@ class SlackBot(GenericBot):
     def _get_channel(self, channel):
         return self._client.server.channels.find(channel)
 
-    def _poll(self):
-        if not self._client.rtm_connect():
-            print('Could not connect to Slack\'s RTM API.',
-                  file=sys.stderr)
-            self.stop()
-        self._on_connect()
+    def _run(self):
         while True:
             try:
-                data = self._client.rtm_read()
-            except:
-                self.stop()
-            else:
-                for event in data:
-                    self._handle_event(event)
-                self._ping()
-                sleep(.5)
+                self._poll()
+            except (
+                    SlackNotConnected,
+                    SlackConnectionError,
+                    SlackLoginError
+            ) as e:
+                print(e, file=sys.stderr)
+                sleep(60)
+
+    def _poll(self):
+        self._client.server.rtm_connect()
+        self._on_connect()
+        while True:
+            data = self._client.rtm_read()
+            for event in data:
+                self._handle_event(event)
+            self._ping()
+            sleep(.5)
 
     def _ping(self):
         now = time.time()

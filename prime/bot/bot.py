@@ -43,13 +43,8 @@ class GenericBot(object):
         self._greenlet = None
 
     def _run(self):
-        while True:
-            self._poll()
-            sleep(10)
-
-    def _poll(self):
         raise NotImplementedError(
-            '%r should implement the `_poll` method.'
+            '%r should implement the `_run` method.'
             % self.__class__.__name__
         )
 
