@@ -1,6 +1,7 @@
 import re
 import sys
 import time
+import traceback
 
 from gevent import sleep, spawn_raw
 from prime.bot.bot import GenericBot
@@ -134,13 +135,9 @@ class SlackBot(GenericBot):
         while True:
             try:
                 self._poll()
-            except (
-                    SlackNotConnected,
-                    SlackConnectionError,
-                    SlackLoginError
-            ) as e:
-                print(e, file=sys.stderr)
-                sleep(60)
+            except:
+                traceback.print_exc()
+                sleep(10)
 
     def _poll(self):
         self._client.server.rtm_connect()
