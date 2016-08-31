@@ -27,7 +27,6 @@ setup(
         'idna==2.1',
         'inflection==0.3.1',
         'ndg-httpsclient==0.4.2',
-        'paramiko==2.0.2',
         'peewee==2.8.3',
         'pyasn1==0.1.9',
         'pycparser==2.14',
