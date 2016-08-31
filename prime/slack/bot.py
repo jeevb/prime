@@ -130,14 +130,6 @@ class SlackBot(GenericBot):
     def _get_channel(self, channel):
         return self._client.server.channels.find(channel)
 
-    def _run(self):
-        while True:
-            try:
-                self._poll()
-            except:
-                traceback.print_exc()
-                sleep(10)
-
     def _poll(self):
         self._client.server.rtm_connect()
         self._on_connect()

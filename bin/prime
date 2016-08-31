@@ -96,11 +96,8 @@ def slack(token=None):
         print('No Slack Bot API token specified.', file=sys.stderr)
     else:
         bot = SlackBot(token)
-        try:
-            bot.start()
-            bot.join()
-        except (KeyboardInterrupt, SystemExit):
-            bot.stop()
+        bot.start()
+        bot.join()
 
 def createsuperuser(user):
     mgr = GroupsMgr()

@@ -1,5 +1,6 @@
 from gevent import Greenlet, sleep
 from gevent.event import Event
+from greenlet import GreenletExit
 from prime.bot.command import CommandMgr
 from prime.bot.listener import ListenerMgr
 from prime.bot.job import JobsMgr
@@ -43,8 +44,18 @@ class GenericBot(object):
         self._greenlet = None
 
     def _run(self):
+        while True:
+            try:
+                self._poll()
+            except (GreenletExit, KeyboardInterrupt, SystemExit):
+                self.stop()
+            except:
+                traceback.print_exc()
+                sleep(10)
+
+    def _poll(self):
         raise NotImplementedError(
-            '%r should implement the `_run` method.'
+            '%r should implement the `_poll` method.'
             % self.__class__.__name__
         )
 
