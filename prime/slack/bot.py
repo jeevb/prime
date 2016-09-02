@@ -20,6 +20,7 @@ class SlackBot(GenericBot):
         super(SlackBot, self).__init__()
         self._client = SlackClient(token)
         self._ping_interval = ping_interval
+        self._last_ping = None
         # Pattern to determine if incoming messages are targeting bot
         self._targeting_me_re = None
 
@@ -132,18 +133,18 @@ class SlackBot(GenericBot):
     def _poll(self):
         self._client.server.rtm_connect()
         self._on_connect()
-        # Start a greenlet that will ping server on a specific interval
-        spawn_raw(self._ping)
         while True:
             data = self._client.rtm_read()
             for event in data:
                 self._handle_event(event)
+            self._ping()
             sleep(.5)
 
     def _ping(self):
-        while True:
+        now = time.time()
+        if not self._last_ping or now > self._last_ping + self._ping_interval:
             self._client.server.ping()
-            sleep(self._ping_interval)
+            self._last_ping = now
 
     def send(self, channel, message):
         message = strip(message)
