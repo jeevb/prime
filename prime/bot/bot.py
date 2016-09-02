@@ -1,3 +1,5 @@
+import traceback
+
 from gevent import Greenlet, sleep
 from gevent.event import Event
 from greenlet import GreenletExit
