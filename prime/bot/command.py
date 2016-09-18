@@ -155,8 +155,6 @@ class CommandMgr(ModuleMgr):
         )
 
     def handle(self, query):
-        if not query.is_targeting_me:
-            return
         for cmd in self._modules:
             match = cmd.pattern.search(query.message)
             if not match:
