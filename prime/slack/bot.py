@@ -6,9 +6,9 @@ from gevent import sleep, spawn_raw
 from prime.bot.bot import GenericBot
 from prime.bot.constants import SEPARATORS
 from prime.bot.utils import strip
+from prime.slack.client import SlackClient2
 from prime.slack.groups import SlackGroupsMgr
 from prime.slack.query import SlackQuery
-from slackclient import SlackClient
 from slackclient._client import SlackNotConnected
 from slackclient._server import SlackConnectionError, SlackLoginError
 
@@ -18,7 +18,7 @@ class SlackBot(GenericBot):
 
     def __init__(self, token, ping_interval=3):
         super(SlackBot, self).__init__()
-        self._client = SlackClient(token)
+        self._client = SlackClient2(token)
         self._ping_interval = ping_interval
         self._last_ping = None
         # Pattern to determine if incoming messages are targeting bot
