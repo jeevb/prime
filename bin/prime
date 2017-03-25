@@ -6,11 +6,9 @@ import os
 import sys
 import yaml
 
-from argh import arg
-from argh.dispatching import dispatch_commands
+from argh import arg, EntryPoint
 from collections import OrderedDict
 
-from prime.api.notify import PrimeNotifyAPI
 from prime.bot.constants import OWNER_GROUP, ADMIN_GROUP
 from prime.bot.groups import GroupsMgr
 from prime.slack.bot import SlackBot
@@ -21,13 +19,15 @@ from prime.storage.local_storage import (
     USER_JOBS_DIR
 )
 
+HEADER = """
+    ____       _
+   / __ \_____(_)___ ___  ___
+  / /_/ / ___/ / __ `__ \/ _ \\
+ / ____/ /  / / / / / / /  __/
+/_/   /_/  /_/_/ /_/ /_/\___/
+"""
 CONFIG_FILE_PATH = os.path.join(USER_DIR, 'config.yml')
 DEFAULT_CONFIG = OrderedDict([
-    ('host', '127.0.0.1'),
-    ('port', '8000'),
-    ('token', ''),
-    ('to', 'default'),
-    ('cert', ''),
     ('slack_token', ''),
 ])
 
@@ -38,6 +38,9 @@ def get_config():
     except:
         return DEFAULT_CONFIG
 
+app = EntryPoint('Prime')
+
+@app
 def init():
     # Make user configuration directory
     for d in (
@@ -54,7 +57,7 @@ def init():
         try:
             for prompt, value in DEFAULT_CONFIG.items():
                 cfg[prompt] = input('{0} [{1}]: '.format(
-                    prompt.capitalize(),
+                    prompt.replace('_', ' ').title(),
                     value
                 )) or value
         except KeyboardInterrupt:
@@ -68,29 +71,10 @@ def init():
         print('You already have a configuration file.',
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
-@arg('--host', help='Host address of the Services master.')
-@arg('--port', help='Port that the Services master will be listening on.')
-@arg('--token', help='API key to authenticate with Services master.')
-@arg('--to', help='Route to send messages to.')
-@arg('--cert', help='Path to certificate file for SSL verification.')
-@arg('text', nargs='*')
-def notify(text, host=None, port=None, token=None, to=None, cert=None):
-    cfg = get_config()
-    notifier = PrimeNotifyAPI(host=host or cfg.get('host'),
-                              port=port or cfg.get('port'),
-                              token=token or cfg.get('token'),
-                              cert=cert or cfg.get('cert') or False)
-    notifier(text=' '.join(text), to=(to or cfg.get('to')).split(','))
-
+@app
 @arg('--token', help='API key to authenticate with the Slack RTM API.')
 def slack(token=None):
-    print(
-        '    ____       _\n'
-        '   / __ \_____(_)___ ___  ___\n'
-        '  / /_/ / ___/ / __ `__ \/ _ \\\n'
-        ' / ____/ /  / / / / / / /  __/\n'
-        '/_/   /_/  /_/_/ /_/ /_/\___/\n\n',
-    )
+    print(HEADER)
     token = token or get_config().get('slack_token')
     if not token:
         print('No Slack Bot API token specified.', file=sys.stderr)
@@ -99,6 +83,7 @@ def slack(token=None):
         bot.start()
         bot.join()
 
+@app
 def createsuperuser(user):
     mgr = GroupsMgr()
     mgr.add_user_to_group(user, OWNER_GROUP)
@@ -106,4 +91,4 @@ def createsuperuser(user):
     print(user, 'added as a superuser.')
 
 if __name__ == '__main__':
-    dispatch_commands([init, notify, slack, createsuperuser])
+    app()

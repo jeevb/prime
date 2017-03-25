@@ -1,9 +1,6 @@
 # Prime
 
-Chatbot, python bindings and CLI for [*Services*](https://bitbucket.org/jeevb/services). Currently, it can:
-
-- Respond to commands on Slack.
-- Send notifications to a Services master.
+Slack chatbot.
 
 ## Getting started
 
@@ -54,16 +51,10 @@ $ docker-compose build
 Prime sources configuration options from two locations:
 
 - Current user's home folder: `$HOME/.prime/config.yml`
-- Arguments passed to the `notify` command:
-    - `--host`: Host address of the Services master.
-    - `--port`: Port that the Services master will be listening on.
-    - `--token`: API key to authenticate with Services master.
-    - `--to`: Route to send messages to.
-    - `--cert`: Certificate file to use for SSL verification.
 - Argument passed to the `slack` command:
     - `--token`: API key to authenticate with the Slack RTM API.
 
-To create and populate a configuration file in the user's home folder with the necessary information to communicate with the Services master and Slack RTM API:
+To create and populate a configuration file in the user's home folder with the necessary information to communicate with the Slack RTM API:
 
 **With virtualenv**:
 ```
@@ -90,7 +81,7 @@ $ docker-compose run --rm prime createsuperuser <userid>
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Sanjeev Balakrishnan
+Copyright (c) 2017 Sanjeev Balakrishnan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
