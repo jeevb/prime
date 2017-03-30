@@ -1,11 +1,8 @@
-import os
-
 from peewee import SqliteDatabase, Model
-from prime.storage.local_storage import USER_DIR
 
-PRIME_DB = SqliteDatabase(os.path.join(USER_DIR, 'prime.db'))
+GROUPS_DB = SqliteDatabase(None)
 
 
-class BaseModel(Model):
+class GroupsBaseModel(Model):
     class Meta:
-        database = PRIME_DB
+        database = GROUPS_DB

@@ -1,17 +1,30 @@
+import os
+
 from collections import defaultdict
 from peewee import DoesNotExist
-from prime.bot.constants import OWNER_GROUP, ADMIN_GROUP
+from prime.bot.constants import (
+    SYSTEM_USER,
+    SYSTEM_CHANNEL,
+    OWNER_GROUP,
+    ADMIN_GROUP
+)
 from prime.bot.models import User, Channel, Group, UserGroups, ChannelGroups
-from prime.storage.database import PRIME_DB as db
+from prime.storage.database import GROUPS_DB as db
+from prime.storage.local_storage import DB_DIR
 
 
-class GroupsMgr(object):
+class GroupsMixin(object):
+    database_name = 'groups'
+
     def __init__(self):
+        super(GroupsMixin, self).__init__()
+
         self._db_cache = defaultdict(lambda: defaultdict(set))
         self._check_db()
         self._load()
 
     def _check_db(self):
+        db.init(os.path.join(DB_DIR, self.database_name))
         db.connect()
         db.create_tables(
             [User, Channel, Group, UserGroups, ChannelGroups],
@@ -66,37 +79,69 @@ class GroupsMgr(object):
                 return False
         return True
 
+    def _validate_user(self, user):
+        return user
+
+    def _validate_channel(self, channel):
+        return channel
+
+    def _user_display(self, user):
+        return user
+
+    def _channel_display(self, channel):
+        return channel
+
     def add_user_to_group(self, user, group):
+        user = self._validate_user(user)
         return self._add_to_group(User, user, group)
 
     def add_channel_to_group(self, channel, group):
+        channel = self._validate_channel(channel)
         return self._add_to_group(Channel, channel, group)
 
     def remove_user_from_group(self, user, group):
+        user = self._validate_user(user)
         return self._remove_from_group(User, user, group)
 
     def remove_channel_from_group(self, channel, group):
+        channel = self._validate_channel(channel)
         return self._remove_from_group(Channel, channel, group)
 
     def user_in_group(self, user, group):
+        user = self._validate_user(user)
         return self._in_group(User, user, group)
 
     def channel_in_group(self, channel, group):
+        channel = self._validate_channel(channel)
         return self._in_group(Channel, channel, group)
 
     def users_in_groups(self, *groups):
-        return self._list_in_groups(User, groups)
+        for user in self._list_in_groups(User, groups):
+            yield self._user_display(user)
 
     def channels_in_groups(self, *groups):
-        return self._list_in_groups(Channel, groups)
+        for channel in self._list_in_groups(Channel, groups):
+            yield self._channel_display(channel)
 
     def list_user_groups(self, user=None):
-        return self._list_groups(User, user)
+        if user == SYSTEM_USER:
+            return
+        if user is not None:
+            user = self._validate_user(user)
+        for user, groups in self._list_groups(User, user):
+            yield self._user_display(user), groups
 
     def list_channel_groups(self, channel=None):
-        return self._list_groups(Channel, channel)
+        if channel == SYSTEM_CHANNEL:
+            return
+        if channel is not None:
+            channel = self._validate_channel(channel)
+        for channel, groups in self._list_groups(Channel, channel):
+            yield self._channel_display(channel), groups
 
     def can_modify_group(self, user, group):
+        if user == SYSTEM_USER:
+            return True
         if group not in (OWNER_GROUP, ADMIN_GROUP,):
             if self.is_admin(user) or self.user_in_group(user, group):
                 return True;
@@ -109,10 +154,15 @@ class GroupsMgr(object):
         return self.user_in_group(user, ADMIN_GROUP)
 
     def is_authorized_user(self, user, groups):
+        if user == SYSTEM_USER:
+            return True
+        _user = self._validate_user(user)
         if not OWNER_GROUP in (groups or []):
-            if self.is_admin(user) or self._is_authorized(User, user, groups):
+            if self.is_admin(user) or self._is_authorized(User, _user, groups):
                 return True
         return self.is_owner(user)
 
     def is_authorized_channel(self, channel, groups):
+        if channel == SYSTEM_CHANNEL:
+            return True
         return self._is_authorized(Channel, channel, groups)

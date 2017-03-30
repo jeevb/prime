@@ -2,21 +2,35 @@
 
 import gevent.monkey; gevent.monkey.patch_all()
 
+# Suppress warnings when making requests using Requests package
+# without proper SSL verification
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 import os
 import sys
 import yaml
 
 from argh import arg, EntryPoint
 from collections import OrderedDict
+from inflection import humanize
+from prompt_toolkit import prompt
 
 from prime.bot.constants import OWNER_GROUP, ADMIN_GROUP
-from prime.bot.groups import GroupsMgr
+from prime.bot.groups import GroupsMixin
+from prime.config.slack import SlackConfig
+from prime.config.mattermost import MattermostConfig
+from prime.mattermost.bot import MattermostBot
 from prime.slack.bot import SlackBot
 from prime.storage.local_storage import (
     USER_DIR,
+    CONFIG_FILE_PATH,
     USER_COMMANDS_DIR,
     USER_LISTENERS_DIR,
-    USER_JOBS_DIR
+    USER_JOBS_DIR,
+    DB_DIR
 )
 
 HEADER = """
@@ -26,17 +40,7 @@ HEADER = """
  / ____/ /  / / / / / / /  __/
 /_/   /_/  /_/_/ /_/ /_/\___/
 """
-CONFIG_FILE_PATH = os.path.join(USER_DIR, 'config.yml')
-DEFAULT_CONFIG = OrderedDict([
-    ('slack_token', ''),
-])
-
-def get_config():
-    try:
-        with open(CONFIG_FILE_PATH, 'r') as cfg_file:
-            return yaml.load(cfg_file)
-    except:
-        return DEFAULT_CONFIG
+ALL_CONFIGS = (SlackConfig, MattermostConfig,)
 
 app = EntryPoint('Prime')
 
@@ -48,6 +52,7 @@ def init():
             USER_COMMANDS_DIR,
             USER_LISTENERS_DIR,
             USER_JOBS_DIR,
+            DB_DIR
     ):
         if not os.path.exists(d):
             os.makedirs(d)
@@ -55,11 +60,11 @@ def init():
     if not os.path.exists(CONFIG_FILE_PATH):
         cfg = {}
         try:
-            for prompt, value in DEFAULT_CONFIG.items():
-                cfg[prompt] = input('{0} [{1}]: '.format(
-                    prompt.replace('_', ' ').title(),
-                    value
-                )) or value
+            for config in ALL_CONFIGS:
+                for f in config.get_field_definitions():
+                    msg = '{} [{}]: '.format(humanize(f.name), f.default)
+                    value = prompt(msg)
+                    cfg[f.name] = value
         except KeyboardInterrupt:
             return
 
@@ -72,23 +77,30 @@ def init():
               'You may edit it at %r.' % CONFIG_FILE_PATH)
 
 @app
-@arg('--token', help='API key to authenticate with the Slack RTM API.')
-def slack(token=None):
+@arg('--slack-token', help='API key to authenticate with the Slack RTM API.')
+def slack(**kwargs):
     print(HEADER)
-    token = token or get_config().get('slack_token')
-    if not token:
-        print('No Slack Bot API token specified.', file=sys.stderr)
-    else:
-        bot = SlackBot(token)
-        bot.start()
-        bot.join()
+
+    cfg = SlackConfig.from_user_settings(**kwargs)
+    bot = SlackBot(cfg)
+    bot.start()
+    bot.join()
 
 @app
-def createsuperuser(user):
-    mgr = GroupsMgr()
-    mgr.add_user_to_group(user, OWNER_GROUP)
-    mgr.add_user_to_group(user, ADMIN_GROUP)
-    print(user, 'added as a superuser.')
+@arg('-u', '--mattermost-url', help='URL of Mattermost server.')
+@arg('-t', '--mattermost-team', help='Mattermost team to connect to.')
+@arg('-e', '--mattermost-email',
+     help='Email account to log in to Mattermost server with.')
+@arg('-p', '--mattermost-password',
+     help='Password of account to log in to Mattermost server with.')
+def mattermost(**kwargs):
+    print(HEADER)
+
+    cfg = MattermostConfig.from_user_settings(**kwargs)
+    bot = MattermostBot(cfg)
+    bot.start()
+    bot.join()
+
 
 if __name__ == '__main__':
     app()

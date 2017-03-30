@@ -29,6 +29,7 @@ setup(
         'ndg-httpsclient>=0.4.2',
         'paramiko>=2.1.1',
         'peewee>=2.8.5',
+        'prompt-toolkit>=1.0.13',
         'pyasn1>=0.2.2',
         'pycparser>=2.17',
         'pycrypto>=2.6.1',

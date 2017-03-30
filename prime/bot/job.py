@@ -5,7 +5,6 @@ from prime.bot.constants import (
     JOB_BROADCAST_GROUPS
 )
 from prime.bot.manager import Module, ModuleMgr
-from prime.bot.groups import GroupsMgr
 from prime.storage.local_storage import USER_JOBS_DIR
 
 
@@ -20,9 +19,7 @@ class Job(Module):
 
     def broadcast(self):
         message = self.handle()
-        for channel in GroupsMgr.channels_in_groups(
-                self.bot.groups,
-                *self.broadcast_groups):
+        for channel in self.bot.channels_in_groups(*self.broadcast_groups):
             self.bot.send(channel, message)
 
     def handle(self):

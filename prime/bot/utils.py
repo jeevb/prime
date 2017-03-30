@@ -23,7 +23,7 @@ def splitlines(message, max_lines=30):
         yield chunk.strip()
 
 def code_block(message):
-    blockify = lambda m: '```{0}```'.format(m)
+    blockify = lambda m: '```\n{0}\n```'.format(m)
 
     def from_iterable(iterable):
         for val in iterable:
@@ -35,7 +35,6 @@ def code_block(message):
             return blockify(message)
     elif hasattr(message, '__iter__'):
         return from_iterable(message)
-
 
 class PrettyList(list):
     def columnify(self, cols, sep='\t', fillvalue=''):

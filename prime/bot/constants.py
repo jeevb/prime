@@ -16,11 +16,19 @@ BASE_DIR_JOIN = lambda *p : os.path.join(BASE_DIR, *p)
 ##
 
 SEPARATORS = re.escape(',.:;!? ')
+SHORTHAND_TRIGGER_CHARS = re.escape('!')
+SHORTHAND_TRIGGER_RE = re.compile(r'^[%s]+' % SHORTHAND_TRIGGER_CHARS, re.I)
 
 
 ##
-## Mandatory group definitions
+## ACLs
 ##
+
+# Privileged users
+SYSTEM_USER = 'system'
+
+# Privilged channels
+SYSTEM_CHANNEL = 'system'
 
 # Privileged groups
 OWNER_GROUP = 'owner'

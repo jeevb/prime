@@ -1,17 +1,17 @@
 from peewee import CharField
 from playhouse.fields import ManyToManyField
-from prime.storage.database import BaseModel
+from prime.storage.database import GroupsBaseModel
 
 
-class User(BaseModel):
+class User(GroupsBaseModel):
     name = CharField(unique=True)
 
 
-class Channel(BaseModel):
+class Channel(GroupsBaseModel):
     name = CharField(unique=True)
 
 
-class Group(BaseModel):
+class Group(GroupsBaseModel):
     name = CharField(unique=True)
     users = ManyToManyField(User, related_name='groups')
     channels = ManyToManyField(Channel, related_name='groups')

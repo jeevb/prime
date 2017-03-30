@@ -145,11 +145,11 @@ class CommandMgr(ModuleMgr):
         # Validate user/channel for command use
         return (
             not cmd.direct_message_only or
-            query.is_direct_message
-        ) and self.bot.groups.is_authorized_user(
+            query.is_private
+        ) and self.bot.is_authorized_user(
             query.user,
             cmd.user_groups
-        ) and self.bot.groups.is_authorized_channel(
+        ) and self.bot.is_authorized_channel(
             query.channel,
             cmd.channel_groups
         )
@@ -161,10 +161,10 @@ class CommandMgr(ModuleMgr):
                 continue
             if not self.is_authorized(cmd, query):
                 continue
-            argv = shlex.split(cmd.pattern.sub('', query.message))
             try:
+                argv = shlex.split(cmd.pattern.sub('', query.message))
                 args, _ = cmd.parser.parse_known_args(argv)
-            except CommandPrint as e:
+            except (CommandPrint, ValueError) as e:
                 query.reply_within_block(str(e))
             except CommandExit:
                 pass

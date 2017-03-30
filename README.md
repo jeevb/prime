@@ -1,6 +1,11 @@
 # Prime
 
-Slack chatbot.
+Chatbot.
+
+Currently works with the following platforms:
+
+- Slack
+- Mattermost (v3.4, v3.7)
 
 ## Getting started
 
@@ -53,8 +58,13 @@ Prime sources configuration options from two locations:
 - Current user's home folder: `$HOME/.prime/config.yml`
 - Argument passed to the `slack` command:
     - `--token`: API key to authenticate with the Slack RTM API.
+- Arguments passed to the `mattermost` command:
+    - `--mattermost-url`: URL of Mattermost server.
+    - `--mattermost-team`: Mattermost team to connect to.
+    - `--mattermost-email`: Email account to log in to Mattermost server with.
+    - `--mattermost-password`: Password of account to log in to Mattermost server with.
 
-To create and populate a configuration file in the user's home folder with the necessary information to communicate with the Slack RTM API:
+To create and populate a configuration file in the user's home folder with the necessary information to communicate with the Mattermost or Slack RTM APIs:
 
 **With virtualenv**:
 ```
@@ -64,18 +74,6 @@ To create and populate a configuration file in the user's home folder with the n
 ```
 $ docker-compose run --rm prime init
 ```
-
-To create a superuser for bot commands:
-
-**With virtualenv**:
-```
-(env)$ prime createsuperuser <userid>
-```
-**With Docker**:
-```
-$ docker-compose run --rm prime createsuperuser <userid>
-```
-
 
 # License
 

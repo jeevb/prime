@@ -18,14 +18,14 @@ from prime.bot.constants import ADMIN_GROUP
 class Channelmod(Command):
     @reply_with_exception
     def handle(self, query, args):
-        if not self.bot.groups.can_modify_group(query.user, args.group):
+        if not self.bot.can_modify_group(query.user, args.group):
             query.reply('Only administrators or group members may do that.')
             return
 
         handler = (
-            self.bot.groups.add_channel_to_group
+            self.bot.add_channel_to_group
             if not args.remove else
-            self.bot.groups.remove_channel_from_group
+            self.bot.remove_channel_from_group
         )
 
         added_or_removed = [
@@ -56,11 +56,11 @@ class Channelgroups(Command):
                            help='Only list groups for this channel.')
 
     def get_channel_groups(self, channel):
-        for i in self.bot.groups.list_channel_groups(channel):
+        for i in self.bot.list_channel_groups(channel):
             yield '{0}: {1}'.format(i[0], ','.join(i[1]))
 
     def list_group_channels(self, query, group):
-        channels = list(self.bot.groups.channels_in_groups(group))
+        channels = list(self.bot.channels_in_groups(group))
         if channels:
             query.reply_within_block(
                 '{0}: {1}'.format(group, ','.join(channels)))

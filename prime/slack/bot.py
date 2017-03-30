@@ -2,38 +2,28 @@ import re
 import sys
 import time
 
+from .client import SlackClient2
+from .groups import SlackGroupsMixin
+from .query import SlackQuery
 from gevent import sleep, spawn_raw
 from prime.bot.bot import GenericBot
 from prime.bot.constants import SEPARATORS
 from prime.bot.utils import strip
-from prime.slack.client import SlackClient2
-from prime.slack.groups import SlackGroupsMgr
-from prime.slack.query import SlackQuery
-from slackclient._client import SlackNotConnected
-from slackclient._server import SlackConnectionError, SlackLoginError
 
 
-class SlackBot(GenericBot):
-    groups_mgr_class = SlackGroupsMgr
+class SlackBot(SlackGroupsMixin, GenericBot):
+    query_class = SlackQuery
 
-    def __init__(self, token, ping_interval=3):
+    def __init__(self, cfg):
         super(SlackBot, self).__init__()
-        self._client = SlackClient2(token)
-        self._ping_interval = ping_interval
-        self._last_ping = None
+        self._client = SlackClient2(cfg.slack_token)
+
         # Pattern to determine if incoming messages are targeting bot
         self._targeting_me_re = None
 
     @property
     def _attrs(self):
         return self._client.server.login_data['self']
-
-    def _on_connect(self):
-        # Cache pattern to determine if incoming message is targeting bot
-        link = re.escape('<@{0}>'.format(self._attrs.get('id')))
-        name = re.escape(self._attrs.get('name'))
-        self._targeting_me_re = re.compile(
-            r'^(%s|%s)[%s]+' % (link, name, SEPARATORS), re.I)
 
     def _is_targeting_me(self, message):
         return (
@@ -54,11 +44,11 @@ class SlackBot(GenericBot):
             return
         message, is_targeting_me = self._is_targeting_me(message)
         channel = event.get('channel')
-        query = SlackQuery(user=self._get_user(user),
-                           channel=self._get_channel(channel),
-                           message=message)
+        query = self.query_class(user=self._get_user(user),
+                                 channel=self._get_channel(channel),
+                                 message=message)
         query.is_targeting_me = is_targeting_me or query.is_direct_message
-        return self._on_query(query)
+        return self.on_query(query)
 
     def _handle_user_change(self, event):
         user_data = event.get('user')
@@ -130,29 +120,25 @@ class SlackBot(GenericBot):
     def _get_channel(self, channel):
         return self._client.server.channels.find(channel)
 
-    def _poll(self):
-        self._client.server.rtm_connect()
-        self._on_connect()
+    def poll(self):
         while True:
             data = self._client.rtm_read()
             for event in data:
                 self._handle_event(event)
-            self._ping()
             sleep(.5)
 
-    def _ping(self):
-        now = time.time()
-        if not self._last_ping or now > self._last_ping + self._ping_interval:
-            self._client.server.ping()
-            self._last_ping = now
+    def ping(self):
+        self._client.server.ping()
+
+    def connect(self):
+        self._client.server.rtm_connect()
+
+        # Cache pattern to determine if incoming message is targeting bot
+        link = re.escape('<@{0}>'.format(self._attrs.get('id')))
+        name = re.escape(self._attrs.get('name'))
+        self._targeting_me_re = re.compile(
+            r'^(%s|%s)[%s]+' % (link, name, SEPARATORS), re.I)
 
     def send(self, channel, message):
-        message = strip(message)
-        if isinstance(message, (str, bytes)):
-            if message:
-                self._client.rtm_send_message(channel, message)
-        elif hasattr(message, '__iter__'):
-            for chunk in message:
-                if chunk:
-                    sleep(.5)
-                    self._client.rtm_send_message(channel, chunk)
+        handler = lambda m: self._client.rtm_send_message(channel, m)
+        return self._send_helper(handler, message)

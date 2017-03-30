@@ -18,14 +18,14 @@ from prime.bot.constants import ADMIN_GROUP
 class Usermod(Command):
     @reply_with_exception
     def handle(self, query, args):
-        if not self.bot.groups.can_modify_group(query.user, args.group):
+        if not self.bot.can_modify_group(query.user, args.group):
             query.reply('Only administrators or group members may do that.')
             return
 
         handler = (
-            self.bot.groups.add_user_to_group
+            self.bot.add_user_to_group
             if not args.remove else
-            self.bot.groups.remove_user_from_group
+            self.bot.remove_user_from_group
         )
 
         added_or_removed = [
@@ -56,11 +56,11 @@ class Usergroups(Command):
                            help='Only list groups for this user.')
 
     def get_user_groups(self, user):
-        for i in self.bot.groups.list_user_groups(user):
+        for i in self.bot.list_user_groups(user):
             yield '{0}: {1}'.format(i[0], ','.join(i[1]))
 
     def list_group_users(self, query, group):
-        users = list(self.bot.groups.users_in_groups(group))
+        users = list(self.bot.users_in_groups(group))
         if users:
             query.reply_within_block('{0}: {1}'.format(group, ','.join(users)))
         else:
@@ -81,9 +81,10 @@ class Usergroups(Command):
 @description('Lists groups that you are a part of.')
 class Groups(Command):
     def handle(self, query, args):
-        _, groups = next(self.bot.groups.list_user_groups(query.user_link))
-        if groups:
-            query.reply('You are in the following groups:\n{0}'.format(
-                ', '.join(groups)))
-        else:
+        try:
+            _, groups = next(self.bot.list_user_groups(query.user))
+            if groups:
+                query.reply('You are in the following groups:\n{0}'.format(
+                    ', '.join(groups)))
+        except StopIteration:
             query.reply('You are currently not in any group.')

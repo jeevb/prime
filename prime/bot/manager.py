@@ -7,22 +7,31 @@ import sys
 from gevent import Greenlet
 from prime.bot.constants import PACKAGE_RE
 
+__MANAGED_MODULES__ = []
+
 def load(dirnames):
     for module_root, dirname in dirnames:
         if not os.path.isdir(dirname):
             continue
+
         for fn in os.listdir(dirname):
             match = PACKAGE_RE.match(fn)
             if not match:
                 continue
+
             module_name = '{}.{}'.format(module_root, match.group('package'))
             file_loc = module_name, os.path.join(dirname, match.group())
+
+            module = None
             if sys.version_info < (3, 5):
-                importlib.machinery.SourceFileLoader(*file_loc).load_module()
+                module = importlib.machinery.SourceFileLoader(
+                    *file_loc).load_module()
             else:
                 spec = importlib.util.spec_from_file_location(*file_loc)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
+
+            __MANAGED_MODULES__.append(module)
 
 
 class Module(object):
