@@ -20,6 +20,7 @@ class Job(Module):
     def broadcast(self):
         message = self.handle()
         for channel in self.bot.channels_in_groups(*self.broadcast_groups):
+            channel = self.bot.validate_channel(channel)
             self.bot.send(channel, message)
 
     def handle(self):

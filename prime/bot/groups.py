@@ -79,10 +79,10 @@ class GroupsMixin(object):
                 return False
         return True
 
-    def _validate_user(self, user):
+    def validate_user(self, user):
         return user
 
-    def _validate_channel(self, channel):
+    def validate_channel(self, channel):
         return channel
 
     def _user_display(self, user):
@@ -92,27 +92,27 @@ class GroupsMixin(object):
         return channel
 
     def add_user_to_group(self, user, group):
-        user = self._validate_user(user)
+        user = self.validate_user(user)
         return self._add_to_group(User, user, group)
 
     def add_channel_to_group(self, channel, group):
-        channel = self._validate_channel(channel)
+        channel = self.validate_channel(channel)
         return self._add_to_group(Channel, channel, group)
 
     def remove_user_from_group(self, user, group):
-        user = self._validate_user(user)
+        user = self.validate_user(user)
         return self._remove_from_group(User, user, group)
 
     def remove_channel_from_group(self, channel, group):
-        channel = self._validate_channel(channel)
+        channel = self.validate_channel(channel)
         return self._remove_from_group(Channel, channel, group)
 
     def user_in_group(self, user, group):
-        user = self._validate_user(user)
+        user = self.validate_user(user)
         return self._in_group(User, user, group)
 
     def channel_in_group(self, channel, group):
-        channel = self._validate_channel(channel)
+        channel = self.validate_channel(channel)
         return self._in_group(Channel, channel, group)
 
     def users_in_groups(self, *groups):
@@ -127,7 +127,7 @@ class GroupsMixin(object):
         if user == SYSTEM_USER:
             return
         if user is not None:
-            user = self._validate_user(user)
+            user = self.validate_user(user)
         for user, groups in self._list_groups(User, user):
             yield self._user_display(user), groups
 
@@ -135,7 +135,7 @@ class GroupsMixin(object):
         if channel == SYSTEM_CHANNEL:
             return
         if channel is not None:
-            channel = self._validate_channel(channel)
+            channel = self.validate_channel(channel)
         for channel, groups in self._list_groups(Channel, channel):
             yield self._channel_display(channel), groups
 
@@ -156,7 +156,7 @@ class GroupsMixin(object):
     def is_authorized_user(self, user, groups):
         if user == SYSTEM_USER:
             return True
-        _user = self._validate_user(user)
+        _user = self.validate_user(user)
         if not OWNER_GROUP in (groups or []):
             if self.is_admin(user) or self._is_authorized(User, _user, groups):
                 return True

@@ -25,13 +25,13 @@ class MMGroupsMixin(GroupsMixin):
             raise InvalidEntity('Invalid channel: %r' % channel)
         return channel
 
-    def _validate_user(self, user):
+    def validate_user(self, user):
         match = MM_LINK_USER_RE.match(user)
         if match:
             user = match.group('entity')
         return self._find_in_user_cache(user)['id']
 
-    def _validate_channel(self, channel):
+    def validate_channel(self, channel):
         match = MM_LINK_CHANNEL_RE.match(channel)
         if match:
             channel = match.group('entity')

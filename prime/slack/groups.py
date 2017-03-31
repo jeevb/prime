@@ -11,13 +11,13 @@ SLACK_LINK_CHANNEL_RE = re.compile(SLACK_LINK_RE % '\#')
 class SlackGroupsMixin(GroupsMixin):
     database_name = 'slack_groups'
 
-    def _validate_user(self, user):
+    def validate_user(self, user):
         match = SLACK_LINK_USER_RE.match(user)
         if not match:
             raise InvalidEntity('Invalid user: %r' % user)
         return match.group('entity')
 
-    def _validate_channel(self, channel):
+    def validate_channel(self, channel):
         match = SLACK_LINK_CHANNEL_RE.match(channel)
         if not match:
             raise InvalidEntity('Invalid channel: %r' % channel)
