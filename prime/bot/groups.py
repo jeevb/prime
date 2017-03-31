@@ -115,13 +115,13 @@ class GroupsMixin(object):
         channel = self.validate_channel(channel)
         return self._in_group(Channel, channel, group)
 
-    def users_in_groups(self, *groups):
+    def users_in_groups(self, *groups, render=True):
         for user in self._list_in_groups(User, groups):
-            yield self._user_display(user)
+            yield self._user_display(user) if render else user
 
-    def channels_in_groups(self, *groups):
+    def channels_in_groups(self, *groups, render=True):
         for channel in self._list_in_groups(Channel, groups):
-            yield self._channel_display(channel)
+            yield self._channel_display(channel) if render else channel
 
     def list_user_groups(self, user=None):
         if user == SYSTEM_USER:
