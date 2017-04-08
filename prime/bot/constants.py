@@ -16,8 +16,9 @@ BASE_DIR_JOIN = lambda *p : os.path.join(BASE_DIR, *p)
 ##
 
 SEPARATORS = re.escape(',.:;!? ')
-SHORTHAND_TRIGGER_CHARS = re.escape('!')
-SHORTHAND_TRIGGER_RE = re.compile(r'^[%s]+' % SHORTHAND_TRIGGER_CHARS, re.I)
+SHORTHAND_TRIGGERS = '!'
+SHORTHAND_TRIGGERS_ESC = re.escape(SHORTHAND_TRIGGERS)
+SHORTHAND_TRIGGER_RE = re.compile(r'^[%s]+' % SHORTHAND_TRIGGERS_ESC, re.I)
 
 
 ##

@@ -16,7 +16,7 @@ from prime.bot.manager import Module, ModuleMgr
 from prime.bot.constants import (
     BASE_DIR_JOIN,
     SEPARATORS,
-    SHORTHAND_TRIGGER_CHARS,
+    SHORTHAND_TRIGGERS_ESC,
     COMMAND_ALIASES,
     COMMAND_TIMEOUT,
     COMMAND_DMONLY,
@@ -65,7 +65,7 @@ class ShorthandCommandMixin(object):
     def init_pattern(self):
         self._pattern = re.compile(
             r'^[%s]+(%s)([%s]+)?' % (
-                SHORTHAND_TRIGGER_CHARS,
+                SHORTHAND_TRIGGERS_ESC,
                 self.prefixes,
                 SEPARATORS
             ), re.I
@@ -167,7 +167,7 @@ class Command(Module):
 
     @property
     def prog(self):
-        return inflection.underscore(self.__class__.__name__)
+        return inflection.underscore(self.__class__.__name__).lower()
 
     @property
     def prefixes(self):
