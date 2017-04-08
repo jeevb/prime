@@ -1,7 +1,7 @@
 import traceback
 
 from .command import CommandMgr
-from .constants import SYSTEM_USER, SYSTEM_CHANNEL
+from .constants import SYSTEM_USER, SYSTEM_CHANNEL, SHORTHAND_TRIGGER_RE
 from .listener import ListenerMgr
 from .job import JobsMgr
 from .query import Query
@@ -31,6 +31,9 @@ class GenericBot(object):
 
         # For pinging server
         self._ping_interval = ping_interval
+
+        # Pattern to determine if incoming messages are targeting bot
+        self._targeting_me_re = None
 
     def handle_cmd(self, query):
         self._command_mgr.handle(query)
@@ -136,3 +139,10 @@ class GenericBot(object):
             '%r should implement the `ping` method.'
             % self.__class__.__name__
         )
+
+    def _is_targeting_me(self, message):
+        targeting_me = self._targeting_me_re.match(message) is not None
+        if targeting_me:
+            message = self._targeting_me_re.sub('', message)
+        shorthand = SHORTHAND_TRIGGER_RE.match(message) is not None
+        return message, targeting_me, shorthand

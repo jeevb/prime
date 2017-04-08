@@ -1,16 +1,18 @@
 from prime.bot.command import Command
-from prime.bot.decorators import description, alias, timeout
 
+cmd = Command.create(
+    'hello',
+    aliases=('hi', 'hey', 'yo', 'hola',),
+    timeout=10,
+    description='Say hello.'
+)
 
-@timeout(10)
-@alias('hi', 'hey', 'yo', 'hola')
-@description('Say hello.')
-class Hello(Command):
-    def handle(self, query, args):
-        query.reply_with_one_of(
-            'Hello there!',
-            'Well, hello!',
-            'Hi there!',
-            'Hey you!',
-            'Hey there!'
-        )
+@cmd.register
+def main(command, query, args):
+    query.reply_with_one_of(
+        'Hello there!',
+        'Well, hello!',
+        'Hi there!',
+        'Hey you!',
+        'Hey there!'
+    )

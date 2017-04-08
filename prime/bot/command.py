@@ -4,6 +4,9 @@ import re
 import shlex
 import sys
 
+from argh.assembling import set_default_command, add_commands
+from argh.constants import PARSER_FORMATTER, ATTR_EXPECTS_NAMESPACE_OBJECT
+from argh.dispatching import dispatch
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from gettext import gettext as _
 from gevent import Greenlet, with_timeout
@@ -13,13 +16,13 @@ from prime.bot.manager import Module, ModuleMgr
 from prime.bot.constants import (
     BASE_DIR_JOIN,
     SEPARATORS,
-    COMMAND_ARGS,
-    COMMAND_DESC,
+    SHORTHAND_TRIGGER_CHARS,
     COMMAND_ALIASES,
     COMMAND_TIMEOUT,
     COMMAND_DMONLY,
     COMMAND_USER_GROUPS,
-    COMMAND_CHANNEL_GROUPS
+    COMMAND_CHANNEL_GROUPS,
+    COMMAND_PARSER_ARGS
 )
 
 
@@ -58,42 +61,105 @@ class CommandParser(ArgumentParser):
             _('%(usage)s\n%(prog)s: Error: %(message)s\n') % args)
 
 
+class ShorthandCommandMixin(object):
+    def init_pattern(self):
+        self._pattern = re.compile(
+            r'^[%s]+(%s)([%s]+)?' % (
+                SHORTHAND_TRIGGER_CHARS,
+                self.prefixes,
+                SEPARATORS
+            ), re.I
+        )
+
+
 class Command(Module):
+    __command_handlers__ = None
+
+    @classmethod
+    def create(cls,
+               name,
+               aliases=None,
+               timeout=None,
+               direct_message_only=False,
+               user_groups=None,
+               channel_groups=None,
+               allow_shorthand=False,
+               **parser_args):
+        bases = (ShorthandCommandMixin, cls,) if allow_shorthand else (cls,)
+        return type(
+            name,
+            bases,
+            {
+                COMMAND_ALIASES: aliases,
+                COMMAND_TIMEOUT: timeout,
+                COMMAND_DMONLY: direct_message_only,
+                COMMAND_USER_GROUPS: user_groups,
+                COMMAND_CHANNEL_GROUPS: channel_groups,
+                COMMAND_PARSER_ARGS: parser_args
+            }
+        )
+
+    @classmethod
+    def register(cls, func):
+        if cls.__command_handlers__ is None:
+            cls.__command_handlers__ = []
+        cls.__command_handlers__.append(func)
+        return func
+
     def __init__(self, manager):
         super(Command, self).__init__(manager)
-        # Initialize command parser
-        self._parser = CommandParser(prog=self.prog,
-                                     description=self.description)
-        self.init_parser()
-
         # Initialize command pattern
         self._pattern = None
         self.init_pattern()
 
-    # ===============
-    # Override these methods, if necessary
-    # ===============
-    def init_parser(self):
-        for kwargs in getattr(self, COMMAND_ARGS, []):
-            args = kwargs.pop('option_strings')
-            self._parser.add_argument(*args, **kwargs)
-
     def init_pattern(self):
-        prefix = [self.prog]
-        aliases = getattr(self, COMMAND_ALIASES, None)
-        if aliases is not None:
-            prefix += list(aliases)
         self._pattern = re.compile(
-            r'^(%s)([%s]+)?' % (
-                '|'.join(inflection.underscore(i) for i in prefix),
-                SEPARATORS
-            ),
-            re.I
+            r'^(%s)([%s]+)?' % (self.prefixes, SEPARATORS), re.I)
+
+    def _wrap(self, query, func):
+        @functools.wraps(func)
+        def wrapper(args):
+            return func(self, query, args)
+        setattr(wrapper, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
+        return wrapper
+
+    def get_command_handlers(self, query):
+        assert bool(self.__class__.__command_handlers__), (
+            '%r should contain at least one registered command handler, '
+            'or override the `get_command_handlers()` method.'
+            % self.__class__.__name__
         )
 
+        return [
+            self._wrap(query, func)
+            for func in self.__class__.__command_handlers__
+        ]
+
+    def __call__(self, query):
+        try:
+            argv = shlex.split(self.pattern.sub('', query.message))
+        except ValueError as e:
+            query.reply_within_block('Error parsing arguments: %s' % str(e))
+            return
+
+        parser = CommandParser(prog=self.prog, **self.parser_args)
+
+        handlers = self.get_command_handlers(query)
+        if len(handlers) == 1:
+            set_default_command(parser, handlers[0])
+        else:
+            add_commands(parser, handlers)
+
+        try:
+            dispatch(parser, argv=argv)
+        except CommandPrint as e:
+            query.reply_within_block(str(e))
+        except CommandExit:
+            pass
+
     @property
-    def parser(self):
-        return self._parser
+    def aliases(self):
+        return getattr(self, COMMAND_ALIASES, None)
 
     @property
     def pattern(self):
@@ -104,8 +170,20 @@ class Command(Module):
         return inflection.underscore(self.__class__.__name__)
 
     @property
+    def prefixes(self):
+        def _helper():
+            yield self.prog
+            if self.aliases is not None:
+                yield from self.aliases
+        return '|'.join(inflection.underscore(i) for i in _helper())
+
+    @property
+    def parser_args(self):
+        return getattr(self, COMMAND_PARSER_ARGS, {})
+
+    @property
     def description(self):
-        return getattr(self, COMMAND_DESC, self.prog)
+        return self.parser_args.get('description', self.prog)
 
     @property
     def timeout(self):
@@ -122,12 +200,6 @@ class Command(Module):
     @property
     def channel_groups(self):
         return getattr(self, COMMAND_CHANNEL_GROUPS, None)
-
-    def handle(self, query, args):
-        raise NotImplementedError(
-            '%r should implement the `handle` method.'
-            % self.__class__.__name__
-        )
 
 
 class CommandMgr(ModuleMgr):
@@ -159,27 +231,19 @@ class CommandMgr(ModuleMgr):
             match = cmd.pattern.search(query.message)
             if not match:
                 continue
-            if not self.is_authorized(cmd, query):
-                continue
-            try:
-                argv = shlex.split(cmd.pattern.sub('', query.message))
-                args, _ = cmd.parser.parse_known_args(argv)
-            except (CommandPrint, ValueError) as e:
-                query.reply_within_block(str(e))
-            except CommandExit:
-                pass
-            else:
+
+            if self.is_authorized(cmd, query):
                 func = (
                     functools.partial(with_timeout,
                                       cmd.timeout,
-                                      cmd.handle,
+                                      cmd,
                                       timeout_value=None)
                     if cmd.timeout is not None
-                    else cmd.handle
+                    else cmd
                 )
                 # Spawn a greenlet to handle command
-                g = Greenlet(func, query, args)
+                g = Greenlet(func, query)
                 g.link_exception(self._on_error)
                 g.start()
-            finally:
-                break
+
+            break

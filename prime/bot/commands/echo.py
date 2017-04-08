@@ -1,11 +1,15 @@
 from prime.bot.command import Command
-from prime.bot.decorators import arg, description, timeout
+from prime.bot.decorators import arg
 
+cmd = Command.create(
+    'echo',
+    aliases=('parrot',),
+    timeout=10,
+    description='Echoes a message.'
+)
 
-@timeout(10)
+@cmd.register
 @arg('message', help='Message to echo.', nargs='+')
-@description('Echoes a message.')
-class Echo(Command):
-    def handle(self, query, args):
-        message = ' '.join(args.message)
-        query.reply(message)
+def main(command, query, args):
+    message = ' '.join(args.message)
+    query.reply(message)

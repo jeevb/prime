@@ -24,19 +24,9 @@ class MattermostBot(MMGroupsMixin, GenericBot):
 
         self._cache_refresh_interval = cache_refresh_interval
 
-        # Pattern to determine if incoming messages are targeting bot
-        self._targeting_me_re = None
-
         # Local caches
         self._user_cache = UserCache()
         self._channel_cache = ChannelCache()
-
-    def _is_targeting_me(self, message):
-        return (
-            (self._targeting_me_re.sub('', message), True)
-            if self._targeting_me_re.match(message) is not None
-            else (message, False)
-        )
 
     def _handle_post_edited(self, event):
         return self._handle_posted(event)
@@ -49,7 +39,7 @@ class MattermostBot(MMGroupsMixin, GenericBot):
         if not message:
             return
 
-        message, is_targeting_me = self._is_targeting_me(message)
+        message, is_targeting_me, shorthand = self._is_targeting_me(message)
         user_id = post['user_id']
         channel_id = post['channel_id']
 
@@ -71,7 +61,11 @@ class MattermostBot(MMGroupsMixin, GenericBot):
                                  channel_id,
                                  message,
                                  channel_type == 'D')
-        query.is_targeting_me = is_targeting_me or query.is_direct_message
+        query.is_targeting_me = (is_targeting_me or
+                                 shorthand or
+                                 query.is_direct_message)
+        if shorthand:
+            query.is_private = True
 
         return self.on_query(query)
 

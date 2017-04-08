@@ -18,23 +18,14 @@ class SlackBot(SlackGroupsMixin, GenericBot):
         super(SlackBot, self).__init__()
         self._client = SlackClient2(cfg.slack_token)
 
-        # Pattern to determine if incoming messages are targeting bot
-        self._targeting_me_re = None
-
     @property
     def _attrs(self):
         return self._client.server.login_data['self']
 
-    def _is_targeting_me(self, message):
-        return (
-            (self._targeting_me_re.sub('', message), True)
-            if self._targeting_me_re.match(message) is not None
-            else (message, False)
-        )
-
     def _handle_message(self, event):
         message = event.get('text')
         user = event.get('user')
+
         # Handle case of edited message
         event_message = event.get('message')
         if not message and event_message:
@@ -42,12 +33,19 @@ class SlackBot(SlackGroupsMixin, GenericBot):
             user = event_message.get('user')
         if not message:
             return
-        message, is_targeting_me = self._is_targeting_me(message)
+
+        message, is_targeting_me, shorthand = self._is_targeting_me(message)
         channel = event.get('channel')
+
         query = self.query_class(user=self._get_user(user),
                                  channel=self._get_channel(channel),
                                  message=message)
-        query.is_targeting_me = is_targeting_me or query.is_direct_message
+        query.is_targeting_me = (is_targeting_me or
+                                 shorthand or
+                                 query.is_direct_message)
+        if shorthand:
+            query.is_private = True
+
         return self.on_query(query)
 
     def _handle_user_change(self, event):
