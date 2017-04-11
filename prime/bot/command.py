@@ -119,7 +119,8 @@ class Command(Module):
     def _wrap(self, query, func):
         @functools.wraps(func)
         def wrapper(args):
-            return func(self, query, args)
+            result = func(self, query, args)
+            return result
         setattr(wrapper, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
         return wrapper
 
