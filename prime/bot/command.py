@@ -1,5 +1,6 @@
 import functools
 import inflection
+import io
 import re
 import shlex
 import sys
@@ -124,6 +125,12 @@ class Command(Module):
         setattr(wrapper, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
         return wrapper
 
+    @staticmethod
+    def _concat_errors(stdout=None, stderr=None):
+        if stderr:
+            stderr = 'ERROR:\n{}'.format(stderr)
+        return '\n\n'.join((stdout, stderr)).strip()
+
     def get_command_handlers(self, query):
         assert bool(self.__class__.__command_handlers__), (
             '%r should contain at least one registered command handler, '
@@ -151,8 +158,20 @@ class Command(Module):
         else:
             add_commands(parser, handlers)
 
+        output_file = io.StringIO()
+        errors_file = io.StringIO()
+
         try:
-            dispatch(parser, argv=argv)
+            dispatch(parser,
+                     argv=argv,
+                     raw_output=True,
+                     output_file=output_file,
+                     errors_file=errors_file)
+
+            error_msg = self._concat_errors(
+                output_file.getvalue(), errors_file.getvalue())
+            if error_msg:
+                raise CommandPrint(error_msg)
         except CommandPrint as e:
             query.reply_within_block(str(e))
         except CommandExit:
