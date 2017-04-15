@@ -30,6 +30,7 @@ from prime.storage.local_storage import (
     USER_COMMANDS_DIR,
     USER_LISTENERS_DIR,
     USER_JOBS_DIR,
+    USER_FIXTURES_DIR,
     DB_DIR
 )
 
@@ -52,6 +53,7 @@ def init():
             USER_COMMANDS_DIR,
             USER_LISTENERS_DIR,
             USER_JOBS_DIR,
+            USER_FIXTURES_DIR,
             DB_DIR
     ):
         if not os.path.exists(d):
