@@ -235,16 +235,17 @@ class CommandMgr(ModuleMgr):
 
     def is_authorized(self, cmd, query):
         # Validate user/channel for command use
-        return (
-            not cmd.direct_message_only or
-            query.is_private
-        ) and self.bot.is_authorized_user(
-            query.user,
-            cmd.user_groups
-        ) and self.bot.is_authorized_channel(
-            query.channel,
-            cmd.channel_groups
-        )
+        if not self.bot.is_authorized_user(query.user, cmd.user_groups):
+            return False
+
+        if not query.is_private and (
+                cmd.direct_message_only or
+                not self.bot.is_authorized_channel(
+                    query.channel, cmd.channel_groups)
+        ):
+            return False
+
+        return True
 
     def handle(self, query):
         for cmd in self._modules:
