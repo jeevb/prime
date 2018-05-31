@@ -248,23 +248,26 @@ class CommandMgr(ModuleMgr):
         return True
 
     def handle(self, query):
-        for cmd in self._modules:
-            match = cmd.pattern.search(query.message)
-            if not match:
-                continue
+        # Find a valid command that matches query
+        cmd = next(
+            filter(
+                lambda c: c.pattern.search(query.message),
+                self._modules
+            ),
+            None
+        )
 
-            if self.is_authorized(cmd, query):
-                func = (
-                    functools.partial(with_timeout,
-                                      cmd.timeout,
-                                      cmd,
-                                      timeout_value=None)
-                    if cmd.timeout is not None
-                    else cmd
-                )
-                # Spawn a greenlet to handle command
-                g = Greenlet(func, query)
-                g.link_exception(self._on_error)
-                g.start()
-
-            break
+        # If the command exists and is authorized, execute it.
+        if cmd is not None and self.is_authorized(cmd, query):
+            func = (
+                functools.partial(with_timeout,
+                                  cmd.timeout,
+                                  cmd,
+                                  timeout_value=None)
+                if cmd.timeout is not None
+                else cmd
+            )
+            # Spawn a greenlet to handle command
+            g = Greenlet(func, query)
+            g.link_exception(self._on_error)
+            g.start()
