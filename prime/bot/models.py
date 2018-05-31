@@ -1,5 +1,4 @@
-from peewee import CharField
-from playhouse.fields import ManyToManyField
+from peewee import CharField, ManyToManyField
 from prime.storage.database import GroupsBaseModel
 
 
@@ -13,8 +12,8 @@ class Channel(GroupsBaseModel):
 
 class Group(GroupsBaseModel):
     name = CharField(unique=True)
-    users = ManyToManyField(User, related_name='groups')
-    channels = ManyToManyField(Channel, related_name='groups')
+    users = ManyToManyField(User, backref='groups')
+    channels = ManyToManyField(Channel, backref='groups')
 
 
 UserGroups = Group.users.get_through_model()

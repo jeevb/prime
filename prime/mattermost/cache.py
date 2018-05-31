@@ -51,8 +51,8 @@ class UserCache(CachedObjects):
         # Clear existing entries
         self.clear()
 
-        for k, v in data.items():
-            self[k, v['username']] = v
+        for elem in data:
+            self[elem['id'], elem['username']] = elem
 
 
 class ChannelCache(CachedObjects):

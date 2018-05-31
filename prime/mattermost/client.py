@@ -1,12 +1,10 @@
 import datetime
 import errno
-import itertools
 import json
 import requests
 import ssl
 import websocket
 
-from .decorators import api_specific
 from .exceptions import BotNotConnected
 
 
@@ -25,7 +23,6 @@ class MattermostClient(object):
         self._token = None
         self.login(email, password)
 
-        self._api_version = None
         self._team_id = None
         self.load_initial_data(team)
 
@@ -34,17 +31,13 @@ class MattermostClient(object):
         return self._user
 
     @property
-    def api_version(self):
-        return self._api_version
-
-    @property
     def _headers(self):
         return {'Authorization': 'Bearer %s' % self._token}
 
-    def get(self, request, use_token=True, raise_for_status=False):
-        kwargs = {'verify': self._ssl_verify}
+    def get(self, request, use_token=True, raise_for_status=False, **kwargs):
+        kwargs['verify'] = self._ssl_verify
         if use_token:
-            kwargs.update({'headers': self._headers})
+            kwargs['headers'] = self._headers
 
         response = requests.get(self._url + request, **kwargs)
         if raise_for_status and response.status_code != requests.codes.OK:
@@ -82,31 +75,29 @@ class MattermostClient(object):
         self._token = response.headers['Token']
 
     def load_initial_data(self, team_name):
-        response = self.get('/users/initial_load').json()
+        response = self.get('/config/client', params={'format': 'old'}).json()
         self._api_version = tuple(map(int,
-            response['client_cfg']['Version'].split('.')[:2]))
+            response['Version'].split('.')[:2]))
 
-        for team in response['teams']:
-            if team['display_name'] == team_name:
+        teams = self.get('/users/{}/teams'.format(self._user['id'])).json()
+        for team in teams:
+            if team['name'] == team_name:
                 self._team_id = team['id']
                 break
+        else:
+            raise SystemExit('Invalid team: %s.' % team_name)
 
     def channel_msg(self, channel_id, message):
         create_at = datetime.datetime.now().strftime('%s')
-        route = '/teams/%s/channels/%s/posts/create' % (
-            self._team_id, channel_id)
         data = {
-            'user_id': self._user['id'],
             'channel_id': channel_id,
-            'message': message,
-            'create_at': int(create_at),
-            'pending_post_id': '%s:%s' % (self._user['id'], create_at),
+            'message': message
         }
 
-        return self.post(route, data=data).json()
+        return self.post('/posts', data=data).json()
 
     def connect_websocket(self):
-        url = '{}/users/websocket'.format(self._url.replace('http', 'ws'))
+        url = '{}/websocket'.format(self._url.replace('http', 'ws'))
         self._connect_websocket(url)
         if self._websocket.getstatus() != 101:
             raise BotNotConnected
@@ -173,47 +164,17 @@ class MattermostClient(object):
 
         return events
 
-    def _get_channels_helper_3_4(self):
-        route = '/teams/%s/channels/' % self._team_id
-        return itertools.chain(
-            self.get(route).json().get('channels', []),
-            self.get('%s/more' % route).json().get('channels', [])
-        )
-
-    def _get_channels_helper_3_7(self):
-        route = '/teams/%s/channels/' % self._team_id
-        return itertools.chain(
-            self.get(route).json(),
-            self.get('%s/more' % route).json()
-        )
-
-    @api_specific
     def get_channels(self):
-        pass
+        route = '/users/%s/teams/%s/channels' % (self._user['id'], self._team_id)
+        return self.get(route).json()
 
-    def _get_users_helper_3_4(self):
-        return self.get('/users/profiles/%s' % self._team_id).json()
-
-    def _get_users_helper_3_7(self, pagination_size=100):
-        profiles = {}
-
-        start = 0
-        while True:
-            end = start + pagination_size
-            route = '/teams/%s/users/%i/%i' % (self._team_id, start, end)
-            page = self.get(route).json()
-            profiles.update(page)
-
-            if len(page) < pagination_size:
-                break
-
-            start = end
-
-        return profiles
-
-    @api_specific
     def get_users(self):
-        pass
+        user_ids = [
+            i['user_id'] for i in
+            self.get('/teams/%s/members' % self._team_id).json()
+        ]
+
+        return self.post('/users/ids', data=user_ids).json()
 
     def ping(self):
         self._websocket.ping()

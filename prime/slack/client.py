@@ -1,6 +1,6 @@
-from slackclient._channel import Channel
-from slackclient._client import SlackClient, SlackNotConnected
-from slackclient._server import Server
+from slackclient.channel import Channel
+from slackclient.client import SlackClient, SlackNotConnected
+from slackclient.server import Server
 
 
 class SlackChannel(Channel):
